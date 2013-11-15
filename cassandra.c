@@ -59,6 +59,18 @@ int main(void){
                                 printf("straight\n");
                         }
                 }
+
+                static unsigned chits = 0;
+                static unsigned dhits = 0;
+                static unsigned hhits = 0;
+                static unsigned shits = 0;
+                chits += (c) ? 1 : 0;
+                dhits += (d) ? 1 : 0;
+                hhits += (h) ? 1 : 0;
+                shits += (s) ? 1 : 0;
+                if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
+                        printf("flush\n");
+                }
         }
 
 	return 0;
