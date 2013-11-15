@@ -48,6 +48,11 @@ int main(void){
                 if(i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
                         if((lump & smask) == smask){
+                                //check for straight-flush
+                                if(club & smask || diamond & smask || heart & smask || spade & smask){
+                                        printf("straight-flush\n");
+                                }
+
                                 printf("straight\n");
                         }
                 }
