@@ -12,22 +12,28 @@ int main(void){
         hand |= 1ULL<<26;
         hand |= 1ULL<<39;
 
+
+        unsigned club = hand & 0x1FFF;
+        unsigned diamond = (hand>>13) & 0x1FFF;
+        unsigned heart = (hand>>26) & 0x1FFF;
+        unsigned spade = (hand>>39) & 0x1FFF;
+
         /* check for combinations of pairs */
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
         /* if true then check for three of a kind */
         /* if true then check for four of a kind */
         for(unsigned i = 0; i < 13; i++){
-                unsigned club = hand & 1ULL<<i;
-                unsigned diamond = (hand & 1ULL<<(i+13)) >> 13;
-                unsigned heart = (hand & 1ULL<<(i+26)) >> 26;
-                unsigned spade = (hand & 1ULL<<(i+39)) >> 39;
+                unsigned c = club & 1ULL<<i;
+                unsigned d = diamond & 1ULL<<i;
+                unsigned h = heart & 1ULL<<i;
+                unsigned s = spade & 1ULL<<i;
 
                 // check for pair
-                if(club&diamond || club&heart || club&spade || diamond&heart || diamond&spade || heart&spade){
+                if(c & d || c & h || c & s || d & h || d & s || h & s){
                         // check for three-of-a-kind
-                        if(club&diamond&heart || club&diamond&spade || club&heart&spade || diamond&heart&spade){
+                        if(c & d & h || c & d & s || c & h & s || d & h & s){
                                 //check for four-of-a-kind
-                                if(club&diamond&heart&spade){
+                                if(c & d & h & s){
                                         printf("four-of-a-kind\n");
                                 }
 
