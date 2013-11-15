@@ -19,6 +19,9 @@ int main(void){
 
         unsigned lump = club | diamond | heart | spade;
 
+        unsigned pairs = 0;
+        unsigned triples = 0;
+
         /* check for combinations of pairs */
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
         /* if true then check for three of a kind */
@@ -38,9 +41,11 @@ int main(void){
                                         printf("four-of-a-kind\n");
                                 }
 
+                                triples |= 1<<i;
                                 printf("three-of-a-kind\n");
                         }
 
+                        pairs |= 1<<i;
                         printf("pair\n");
                 }
 
@@ -70,6 +75,15 @@ int main(void){
                 shits += (s) ? 1 : 0;
                 if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
                         printf("flush\n");
+                }
+        }
+
+        //check for full-house
+        if(triples){
+                for(unsigned i = 0; i < 13; i++){
+                        if(triples & 1<<i && pairs & ~(1U<<i)){
+                                printf("full-house\n");
+                        }
                 }
         }
 
