@@ -13,10 +13,10 @@ int main(void){
         /* if true then check for three of a kind */
         /* if true then check for four of a kind */
         for(unsigned i = 0; u < 13; i++){
-                unsigned spades = hand & 1ULL<<i;
-                unsigned hearts = hand & 1ULL<<(i+13);
-                unsigned clubs = hand & 1ULL<<(i+26);
-                unsigned diamonds = hand & 1ULL<<(i+39);
+                unsigned club = hand & 1ULL<<i;
+                unsigned diamond = hand & 1ULL<<(i+13);
+                unsigned heart = hand & 1ULL<<(i+26);
+                unsigned spade = hand & 1ULL<<(i+39);
         }
 
 	return 0;
