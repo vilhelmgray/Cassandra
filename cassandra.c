@@ -7,26 +7,25 @@ int main(void){
 
         unsigned long long river = 0x0;
         unsigned long long hand = 0x0;
-        hand |= 1ULL;
-        hand |= 1ULL<<13;
-        hand |= 1ULL<<26;
+        hand |= 1;
+        hand |= 1<<13;
+        hand |= 1UL<<26;
         hand |= 1ULL<<39;
 
-
         unsigned club = hand & 0x1FFF;
-        unsigned diamond = (hand>>13) & 0x1FFF;
-        unsigned heart = (hand>>26) & 0x1FFF;
-        unsigned spade = (hand>>39) & 0x1FFF;
+        unsigned diamond = hand>>13 & 0x1FFF;
+        unsigned heart = hand>>26 & 0x1FFF;
+        unsigned spade = hand>>39 & 0x1FFF;
 
         /* check for combinations of pairs */
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
         /* if true then check for three of a kind */
         /* if true then check for four of a kind */
         for(unsigned i = 0; i < 13; i++){
-                unsigned c = club & 1ULL<<i;
-                unsigned d = diamond & 1ULL<<i;
-                unsigned h = heart & 1ULL<<i;
-                unsigned s = spade & 1ULL<<i;
+                unsigned c = club & 1<<i;
+                unsigned d = diamond & 1<<i;
+                unsigned h = heart & 1<<i;
+                unsigned s = spade & 1<<i;
 
                 // check for pair
                 if(c & d || c & h || c & s || d & h || d & s || h & s){
