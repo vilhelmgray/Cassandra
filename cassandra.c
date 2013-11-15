@@ -12,7 +12,7 @@ int main(void){
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
         /* if true then check for three of a kind */
         /* if true then check for four of a kind */
-        for(unsigned i = 0; u < 13; i++){
+        for(unsigned i = 0; i < 13; i++){
                 unsigned club = hand & 1ULL<<i;
                 unsigned diamond = hand & 1ULL<<(i+13);
                 unsigned heart = hand & 1ULL<<(i+26);
