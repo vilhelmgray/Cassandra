@@ -22,7 +22,13 @@ int main(void){
                 unsigned heart = (hand & 1ULL<<(i+26)) >> 26;
                 unsigned spade = (hand & 1ULL<<(i+39)) >> 39;
 
+                // check for pair
                 if(club&diamond || club&heart || club&spade || diamond&heart || diamond&spade || heart&spade){
+                        // check for three-of-a-kind
+                        if(club&diamond&heart || club&diamond&spade || club&heart&spade || diamond&heart&spade){
+                                printf("three-of-a-kind\n");
+                        }
+
                         printf("pair\n");
                 }
         }
