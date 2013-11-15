@@ -14,9 +14,13 @@ int main(void){
         /* if true then check for four of a kind */
         for(unsigned i = 0; i < 13; i++){
                 unsigned club = hand & 1ULL<<i;
-                unsigned diamond = hand & 1ULL<<(i+13);
-                unsigned heart = hand & 1ULL<<(i+26);
-                unsigned spade = hand & 1ULL<<(i+39);
+                unsigned diamond = (hand & 1ULL<<(i+13)) >> 13;
+                unsigned heart = (hand & 1ULL<<(i+26)) >> 26;
+                unsigned spade = (hand & 1ULL<<(i+39)) >> 39;
+
+                if(club&diamond || club&heart || club&spade || diamond&heart || diamond&spade || heart&spade){
+                        printf("pair\n");
+                }
         }
 
 	return 0;
