@@ -26,6 +26,11 @@ int main(void){
                 if(club&diamond || club&heart || club&spade || diamond&heart || diamond&spade || heart&spade){
                         // check for three-of-a-kind
                         if(club&diamond&heart || club&diamond&spade || club&heart&spade || diamond&heart&spade){
+                                //check for four-of-a-kind
+                                if(club&diamond&heart&spade){
+                                        printf("four-of-a-kind\n");
+                                }
+
                                 printf("three-of-a-kind\n");
                         }
 
