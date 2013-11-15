@@ -50,7 +50,7 @@ int main(void){
                         if((lump & smask) == smask){
                                 //check for straight-flush
                                 if(club & smask || diamond & smask || heart & smask || spade & smask){
-                                        if(id == 9){
+                                        if(i == 9){
                                                 printf("royal-flush\n");
                                         }
                                         printf("straight-flush\n");
