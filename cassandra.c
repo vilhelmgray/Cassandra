@@ -7,6 +7,10 @@ int main(void){
 
         unsigned long long river = 0x0;
         unsigned long long hand = 0x0;
+        hand |= 1ULL;
+        hand |= 1ULL<<13;
+        hand |= 1ULL<<26;
+        hand |= 1ULL<<39;
 
         /* check for combinations of pairs */
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
