@@ -17,6 +17,8 @@ int main(void){
         unsigned heart = hand>>26 & 0x1FFF;
         unsigned spade = hand>>39 & 0x1FFF;
 
+        unsigned lump = club | diamond | heart | spade;
+
         /* check for combinations of pairs */
         /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
         /* if true then check for three of a kind */
@@ -40,6 +42,14 @@ int main(void){
                         }
 
                         printf("pair\n");
+                }
+
+                // check for straight
+                if(i < 10){
+                        unsigned smask = 0xF<<i | 1<<((i+4)%13);
+                        if((lump & smask) == smask){
+                                printf("straight\n");
+                        }
                 }
         }
 
