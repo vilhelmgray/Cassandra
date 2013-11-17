@@ -54,7 +54,7 @@ int main(void){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
                         if((lump & smask) == smask){
                                 //check for straight-flush
-                                if(club & smask || diamond & smask || heart & smask || spade & smask){
+                                if(club & smask == smask || diamond & smask == smask || heart & smask == smask || spade & smask == smask){
                                         if(i == 9){
                                                 printf("royal-flush\n");
                                         }
