@@ -1,5 +1,14 @@
 #include <stdio.h>
 
+static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
+static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_full_house(unsigned triples, unsigned pairs);
+static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_straight(unsigned lump, unsigned smask);
+static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
+static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_two_pairs(unsigned pairs);
+
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
          * playing card deck. Every 13 bits represents a suit. */
@@ -33,11 +42,11 @@ int main(void){
                 unsigned s = spade & 1<<i;
 
                 // check for pair
-                if(c & d || c & h || c & s || d & h || d & s || h & s){
+                if(is_pair(c, d, h, s)){
                         // check for three-of-a-kind
-                        if(c & d & h || c & d & s || c & h & s || d & h & s){
+                        if(is_toak(c, d, h, s)){
                                 // check for four-of-a-kind
-                                if(c & d & h & s){
+                                if(is_foak(c, d, h, s)){
                                         printf("four-of-a-kind\n");
                                 }
 
@@ -52,9 +61,9 @@ int main(void){
                 // check for straight
                 if(i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
-                        if((lump & smask) == smask){
+                        if(is_straight(lump, smask)){
                                 // check for straight-flush
-                                if(club & smask == smask || diamond & smask == smask || heart & smask == smask || spade & smask == smask){
+                                if(is_straight_flush(club, diamond, heart, spade, smask)){
                                         if(i == 9){
                                                 printf("royal-flush\n");
                                         }
@@ -73,28 +82,93 @@ int main(void){
                 dhits += (d) ? 1 : 0;
                 hhits += (h) ? 1 : 0;
                 shits += (s) ? 1 : 0;
-                if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
+                // check for flush
+                if(is_flush(chits, dhits, hhits, shits)){
                         printf("flush\n");
                 }
         }
 
         // check for full-house
-        if(triples){
-                for(unsigned i = 0; i < 13; i++){
-                        if(triples & 1<<i && pairs & ~(1U<<i)){
-                                printf("full-house\n");
-                        }
-                }
+        if(is_full_house(triples, pairs)){
+                printf("full-house\n");
         }
 
         // check for two pairs
-        if(pairs){
-                for(unsigned i = 0; i < 12; i++){
-                        if((pairs>>i) & 0x1 && pairs>>(i+1)){
-                               printf("two pairs\n"); 
+        if(is_two_pairs(pairs)){
+                printf("two pairs\n"); 
+        }
+
+        return 0;
+}
+
+static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
+        if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
+                return 1;
+        }
+
+        return 0;
+}
+
+static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s){
+        if(c & d & h & s){
+                return 1;
+        }
+
+        return 0;
+}
+
+static unsigned is_full_house(unsigned triples, unsigned pairs){
+        if(triples){
+                for(unsigned i = 0; i < 13; i++){
+                        if(triples & 1<<i && pairs & ~(1U<<i)){
+                                return 1;
                         }
                 }
         }
 
-	return 0;
+        return 0;
+}
+
+static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s){
+        if(c & d || c & h || c & s || d & h || d & s || h & s){
+                return 1;
+        }
+
+        return 0;
+}
+
+static unsigned is_straight(unsigned lump, unsigned smask){
+        if((lump & smask) == smask){
+                return 1;
+        }
+        
+        return 0;
+}
+
+static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask){
+        if(club & smask == smask || diamond & smask == smask || heart & smask == smask || spade & smask == smask){
+                return 1;
+        }
+
+        return 0;
+}
+
+static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s){
+        if(c & d & h || c & d & s || c & h & s || d & h & s){
+                return 1;
+        }
+
+        return 0;
+}
+
+static unsigned is_two_pairs(unsigned pairs){
+        if(pairs){
+                for(unsigned i = 0; i < 12; i++){
+                        if((pairs>>i) & 0x1 && pairs>>(i+1)){
+                                return 1;
+                        }
+                }
+        }
+
+        return 0;
 }
