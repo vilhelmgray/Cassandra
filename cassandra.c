@@ -36,7 +36,7 @@ int main(void){
                 if(c & d || c & h || c & s || d & h || d & s || h & s){
                         // check for three-of-a-kind
                         if(c & d & h || c & d & s || c & h & s || d & h & s){
-                                //check for four-of-a-kind
+                                // check for four-of-a-kind
                                 if(c & d & h & s){
                                         printf("four-of-a-kind\n");
                                 }
@@ -53,7 +53,7 @@ int main(void){
                 if(i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
                         if((lump & smask) == smask){
-                                //check for straight-flush
+                                // check for straight-flush
                                 if(club & smask == smask || diamond & smask == smask || heart & smask == smask || spade & smask == smask){
                                         if(i == 9){
                                                 printf("royal-flush\n");
@@ -78,11 +78,20 @@ int main(void){
                 }
         }
 
-        //check for full-house
+        // check for full-house
         if(triples){
                 for(unsigned i = 0; i < 13; i++){
                         if(triples & 1<<i && pairs & ~(1U<<i)){
                                 printf("full-house\n");
+                        }
+                }
+        }
+
+        // check for two pairs
+        if(pairs){
+                for(unsigned i = 0; i < 12; i++){
+                        if((pairs>>i) & 0x1 && pairs>>(i+1)){
+                               printf("two pairs\n"); 
                         }
                 }
         }
