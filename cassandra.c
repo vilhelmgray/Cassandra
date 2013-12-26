@@ -57,6 +57,44 @@ int main(void){
         }while(num < 6);
         hand |= flop;
 
+        printf("==Turn==\n");
+        unsigned long long turn = 0x0;
+        do{
+                printf("Input card #%u: ", num);
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                turn = parse_card(buffer);
+                if(!turn){
+                        fprintf(stderr, "ERROR: Unable to parse card.\n");
+                        continue;
+                }
+                
+                num++;
+        }while(num < 7);
+        hand |= turn;
+
+        printf("==River==\n");
+        unsigned long long river = 0x0;
+        do{
+                printf("Input card #%u: ", num);
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                river = parse_card(buffer);
+                if(!river){
+                        fprintf(stderr, "ERROR: Unable to parse card.\n");
+                        continue;
+                }
+                
+                num++;
+        }while(num < 8);
+        hand |= river;
+
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
         unsigned heart = hand>>26 & 0x1FFF;
