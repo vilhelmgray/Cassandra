@@ -8,6 +8,7 @@ static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pairs(unsigned pairs);
+static unsigned long long parse_card(const char *card_str);
 
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
@@ -16,10 +17,26 @@ int main(void){
 
         unsigned long long river = 0x0;
         unsigned long long hand = 0x0;
-        hand |= 1;
-        hand |= 1<<13;
-        hand |= 1UL<<26;
-        hand |= 1ULL<<39;
+
+        // get beginning hand
+        char buffer[8];
+        unsigned num = 1;
+        do{
+                printf("Input card #%u: ", num);
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                unsigned long long card = parse_card(buffer);
+                if(!card){
+                        fprintf(stderr, "ERROR: Unable to parse card.\n");
+                        continue;
+                }
+                
+                hand |= card;
+                num++;
+        }while(num < 3);
 
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
@@ -99,6 +116,38 @@ int main(void){
         }
 
         return 0;
+}
+
+static unsigned long long parse_card(const char *card_str){
+        unsigned long long card = 0x0;
+
+        unsigned rank;
+        char suit;
+        int retval = sscanf(card_str, "%u %c", &rank, &suit);
+
+        if(retval < 2 || !rank || rank > 13){
+                return 0;
+        }
+
+        card = 1<<(rank-1);
+
+        switch(suit){
+                case 'c':
+                        break;
+                case 'd':
+                        card <<= 13;
+                        break;
+                case 'h':
+                        card <<= 26;
+                        break;
+                case 's':
+                        card <<= 39;
+                        break;
+                default:
+                        return 0;
+        }
+
+        return card;
 }
 
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
