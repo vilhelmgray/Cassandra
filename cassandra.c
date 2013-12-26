@@ -8,7 +8,7 @@ static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_two_pairs(unsigned pairs);
+static unsigned is_two_pair(unsigned pairs);
 static unsigned long long parse_card(const char *card_str);
 
 int main(void){
@@ -171,9 +171,9 @@ static unsigned determine_hand(unsigned long long hand){
                 printf("full-house\n");
         }
 
-        // check for two pairs
-        if(is_two_pairs(pairs)){
-                printf("two pairs\n"); 
+        // check for two pair
+        if(is_two_pair(pairs)){
+                printf("two pair\n"); 
         }
 
         return 0;
@@ -239,7 +239,7 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s){
         return 0;
 }
 
-static unsigned is_two_pairs(unsigned pairs){
+static unsigned is_two_pair(unsigned pairs){
         if(pairs){
                 for(unsigned i = 0; i < 12; i++){
                         if((pairs>>i) & 0x1 && pairs>>(i+1)){
