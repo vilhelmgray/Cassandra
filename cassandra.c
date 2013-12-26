@@ -195,7 +195,7 @@ static unsigned is_straight(unsigned lump, unsigned smask){
 }
 
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask){
-        if(club & smask == smask || diamond & smask == smask || heart & smask == smask || spade & smask == smask){
+        if((club & smask) == smask || (diamond & smask) == smask || (heart & smask) == smask || (spade & smask) == smask){
                 return 1;
         }
 
