@@ -15,10 +15,9 @@ int main(void){
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
 
-        unsigned long long river = 0x0;
-        unsigned long long hand = 0x0;
-
         // get beginning hand
+        printf("==Beginning Hand==\n");
+        unsigned long long hand = 0x0;
         char buffer[8];
         unsigned num = 1;
         do{
@@ -37,6 +36,26 @@ int main(void){
                 hand |= card;
                 num++;
         }while(num < 3);
+
+        printf("==Flop==\n");
+        unsigned long long flop = 0x0;
+        do{
+                printf("Input card #%u: ", num);
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                unsigned long long card = parse_card(buffer);
+                if(!card){
+                        fprintf(stderr, "ERROR: Unable to parse card.\n");
+                        continue;
+                }
+                
+                flop |= card;
+                num++;
+        }while(num < 6);
+        hand |= flop;
 
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
