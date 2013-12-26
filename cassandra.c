@@ -137,38 +137,6 @@ int main(void){
         return 0;
 }
 
-static unsigned long long parse_card(const char *card_str){
-        unsigned long long card = 0x0;
-
-        unsigned rank;
-        char suit;
-        int retval = sscanf(card_str, "%u %c", &rank, &suit);
-
-        if(retval < 2 || !rank || rank > 13){
-                return 0;
-        }
-
-        card = 1<<(rank-1);
-
-        switch(suit){
-                case 'c':
-                        break;
-                case 'd':
-                        card <<= 13;
-                        break;
-                case 'h':
-                        card <<= 26;
-                        break;
-                case 's':
-                        card <<= 39;
-                        break;
-                default:
-                        return 0;
-        }
-
-        return card;
-}
-
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
         if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
                 return 1;
@@ -239,4 +207,36 @@ static unsigned is_two_pairs(unsigned pairs){
         }
 
         return 0;
+}
+
+static unsigned long long parse_card(const char *card_str){
+        unsigned long long card = 0x0;
+
+        unsigned rank;
+        char suit;
+        int retval = sscanf(card_str, "%u %c", &rank, &suit);
+
+        if(retval < 2 || !rank || rank > 13){
+                return 0;
+        }
+
+        card = 1<<(rank-1);
+
+        switch(suit){
+                case 'c':
+                        break;
+                case 'd':
+                        card <<= 13;
+                        break;
+                case 'h':
+                        card <<= 26;
+                        break;
+                case 's':
+                        card <<= 39;
+                        break;
+                default:
+                        return 0;
+        }
+
+        return card;
 }
