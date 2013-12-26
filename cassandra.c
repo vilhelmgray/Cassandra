@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+static unsigned determine_hand(unsigned long long hand);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triples, unsigned pairs);
@@ -55,7 +56,6 @@ int main(void){
                 flop |= card;
                 num++;
         }while(num < 6);
-        hand |= flop;
 
         printf("==Turn==\n");
         unsigned long long turn = 0x0;
@@ -74,7 +74,6 @@ int main(void){
                 
                 num++;
         }while(num < 7);
-        hand |= turn;
 
         printf("==River==\n");
         unsigned long long river = 0x0;
@@ -93,8 +92,13 @@ int main(void){
                 
                 num++;
         }while(num < 8);
-        hand |= river;
 
+        determine_hand(hand|flop|turn|river);
+
+        return 0;
+}
+
+static unsigned determine_hand(unsigned long long hand){
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
         unsigned heart = hand>>26 & 0x1FFF;
