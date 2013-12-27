@@ -44,9 +44,13 @@ int main(void){
                 if(!card){
                         fprintf(stderr, "ERROR: Unable to parse card.\n");
                         continue;
+                }else if(!(card&deck)){
+                        printf("This card has already been selected, be choose another.\n");
+                        continue;
                 }
                 
                 hand |= card;
+                deck &= ~card;
                 num++;
         }while(num < 3);
 
@@ -63,9 +67,13 @@ int main(void){
                 if(!card){
                         fprintf(stderr, "ERROR: Unable to parse card.\n");
                         continue;
+                }else if(!(card&deck)){
+                        printf("This card has already been selected, be choose another.\n");
+                        continue;
                 }
                 
                 flop |= card;
+                deck &= ~card;
                 num++;
         }while(num < 6);
 
@@ -82,8 +90,12 @@ int main(void){
                 if(!turn){
                         fprintf(stderr, "ERROR: Unable to parse card.\n");
                         continue;
+                }else if(!(turn&deck)){
+                        printf("This card has already been selected, be choose another.\n");
+                        continue;
                 }
                 
+                deck &= ~turn;
                 num++;
         }while(num < 7);
 
@@ -100,8 +112,12 @@ int main(void){
                 if(!river){
                         fprintf(stderr, "ERROR: Unable to parse card.\n");
                         continue;
+                }else if(!(river&deck)){
+                        printf("This card has already been selected, be choose another.\n");
+                        continue;
                 }
                 
+                deck &= ~river;
                 num++;
         }while(num < 8);
 
