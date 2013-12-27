@@ -1,6 +1,18 @@
 #include <stdio.h>
 
-static unsigned determine_hand(unsigned long long hand);
+enum hand_t{
+        STRAIGHT_FLUSH,
+        FOUR_OF_A_KIND,
+        FULL_HOUSE,
+        FLUSH,
+        STRAIGHT,
+        THREE_OF_A_KIND,
+        TWO_PAIR,
+        ONE_PAIR,
+        HIGH_CARD
+};
+
+static enum hand_t determine_hand(unsigned long long hand);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triples, unsigned pairs);
@@ -93,12 +105,12 @@ int main(void){
                 num++;
         }while(num < 8);
 
-        determine_hand(hand|flop|turn|river);
+        enum hand_t type = determine_hand(hand|flop|turn|river);
 
         return 0;
 }
 
-static unsigned determine_hand(unsigned long long hand){
+static enum hand_t determine_hand(unsigned long long hand){
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
         unsigned heart = hand>>26 & 0x1FFF;
@@ -176,7 +188,7 @@ static unsigned determine_hand(unsigned long long hand){
                 printf("two pair\n"); 
         }
 
-        return 0;
+        return HIGH_CARD;
 }
 
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
