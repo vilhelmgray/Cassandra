@@ -1,15 +1,15 @@
 #include <stdio.h>
 
 enum hand_t{
-        STRAIGHT_FLUSH,
-        FOUR_OF_A_KIND,
-        FULL_HOUSE,
-        FLUSH,
-        STRAIGHT,
-        THREE_OF_A_KIND,
-        TWO_PAIR,
+        HIGH_CARD,
         ONE_PAIR,
-        HIGH_CARD
+        TWO_PAIR,
+        THREE_OF_A_KIND,
+        STRAIGHT,
+        FLUSH,
+        FULL_HOUSE,
+        FOUR_OF_A_KIND,
+        STRAIGHT_FLUSH
 };
 
 static enum hand_t determine_hand(unsigned long long hand);
@@ -29,7 +29,6 @@ int main(void){
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
 
-        // get beginning hand
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
@@ -46,11 +45,42 @@ int main(void){
         unsigned long long river = get_card(&deck);
 
         enum hand_t type = determine_hand(hand|flop|turn|river);
+        switch(type){
+                case HIGH_CARD:
+                        printf("high card\n");
+                        break;
+                case ONE_PAIR:
+                        printf("one pair\n");
+                        break;
+                case TWO_PAIR:
+                        printf("two pair\n");
+                        break;
+                case THREE_OF_A_KIND:
+                        printf("three of a kind\n");
+                        break;
+                case STRAIGHT:
+                        printf("straight\n");
+                        break;
+                case FLUSH:
+                        printf("flush\n");
+                        break;
+                case FULL_HOUSE:
+                        printf("full house\n");
+                        break;
+                case FOUR_OF_A_KIND:
+                        printf("four of a kind\n");
+                        break;
+                case STRAIGHT_FLUSH:
+                        printf("straight flush\n");
+                        break;
+        }
 
         return 0;
 }
 
 static enum hand_t determine_hand(unsigned long long hand){
+        enum hand_t type = HIGH_CARD;
+
         unsigned club = hand & 0x1FFF;
         unsigned diamond = hand>>13 & 0x1FFF;
         unsigned heart = hand>>26 & 0x1FFF;
@@ -72,35 +102,30 @@ static enum hand_t determine_hand(unsigned long long hand){
                 unsigned s = spade & 1<<i;
 
                 // check for pair
-                if(is_pair(c, d, h, s)){
+                if(type < FULL_HOUSE && is_pair(c, d, h, s)){
+                        pairs |= 1<<i;
+                        type = (type < ONE_PAIR) ? ONE_PAIR : type;
+
                         // check for three-of-a-kind
                         if(is_toak(c, d, h, s)){
+                                triples |= 1<<i;
+                                type = (type < THREE_OF_A_KIND) ? THREE_OF_A_KIND : type;
+
                                 // check for four-of-a-kind
                                 if(is_foak(c, d, h, s)){
-                                        printf("four-of-a-kind\n");
+                                        type = FOUR_OF_A_KIND;
                                 }
-
-                                triples |= 1<<i;
-                                printf("three-of-a-kind\n");
                         }
-
-                        pairs |= 1<<i;
-                        printf("pair\n");
                 }
 
-                // check for straight
-                if(i < 10){
+                // check for straight and straight-flush
+                if(type < STRAIGHT_FLUSH && i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
-                        if(is_straight(lump, smask)){
-                                // check for straight-flush
-                                if(is_straight_flush(club, diamond, heart, spade, smask)){
-                                        if(i == 9){
-                                                printf("royal-flush\n");
-                                        }
-                                        printf("straight-flush\n");
-                                }
-
-                                printf("straight\n");
+                        if(type < STRAIGHT && is_straight(lump, smask)){
+                                type = STRAIGHT;
+                        }
+                        if(type >= STRAIGHT && is_straight_flush(club, diamond, heart, spade, smask)){
+                                type = STRAIGHT_FLUSH;
                         }
                 }
 
@@ -113,22 +138,22 @@ static enum hand_t determine_hand(unsigned long long hand){
                 hhits += (h) ? 1 : 0;
                 shits += (s) ? 1 : 0;
                 // check for flush
-                if(is_flush(chits, dhits, hhits, shits)){
-                        printf("flush\n");
+                if(type < FLUSH && is_flush(chits, dhits, hhits, shits)){
+                        type = FLUSH;
                 }
         }
 
         // check for full-house
-        if(is_full_house(triples, pairs)){
-                printf("full-house\n");
+        if(type < FULL_HOUSE && is_full_house(triples, pairs)){
+                type = FULL_HOUSE;
         }
 
         // check for two pair
-        if(is_two_pair(pairs)){
-                printf("two pair\n"); 
+        if(type < TWO_PAIR && is_two_pair(pairs)){
+                type = TWO_PAIR;
         }
 
-        return HIGH_CARD;
+        return type;
 }
 
 static unsigned long long get_card(unsigned long long *deck){
