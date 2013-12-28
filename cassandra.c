@@ -14,7 +14,7 @@ enum hand_t{
 
 static enum hand_t determine_hand(unsigned long long hand);
 static unsigned long long get_card(unsigned long long *deck);
-static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
+static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triples, unsigned pairs);
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
@@ -129,16 +129,8 @@ static enum hand_t determine_hand(unsigned long long hand){
                         }
                 }
 
-                static unsigned chits = 0;
-                static unsigned dhits = 0;
-                static unsigned hhits = 0;
-                static unsigned shits = 0;
-                chits += (c) ? 1 : 0;
-                dhits += (d) ? 1 : 0;
-                hhits += (h) ? 1 : 0;
-                shits += (s) ? 1 : 0;
                 // check for flush
-                if(type < FLUSH && is_flush(chits, dhits, hhits, shits)){
+                if(type < FLUSH && is_flush(c, d, h, s)){
                         type = FLUSH;
                 }
         }
@@ -182,7 +174,17 @@ static unsigned long long get_card(unsigned long long *deck){
         return card;
 }
 
-static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
+static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s){
+        static unsigned chits = 0;
+        static unsigned dhits = 0;
+        static unsigned hhits = 0;
+        static unsigned shits = 0;
+
+        chits += (c) ? 1 : 0;
+        dhits += (d) ? 1 : 0;
+        hhits += (h) ? 1 : 0;
+        shits += (s) ? 1 : 0;
+
         if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
                 return 1;
         }
