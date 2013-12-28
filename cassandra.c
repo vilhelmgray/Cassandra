@@ -91,11 +91,21 @@ static enum hand_t determine_hand(unsigned long long hand){
         unsigned pairs = 0;
         unsigned triples = 0;
 
-        /* check for combinations of pairs */
-        /* (1<<i | 1<<(i+13) | 1<<(i+13*2) | etc.. */
-        /* if true then check for three of a kind */
-        /* if true then check for four of a kind */
         for(unsigned i = 0; i < 13; i++){
+                if(i < 10){
+                        unsigned smask = 0xF<<i | 1<<((i+4)%13);
+
+                        // check for straight
+                        if(type < STRAIGHT && is_straight(lump, smask)){
+                                type = STRAIGHT;
+                        }
+                        // check for straight-flush
+                        if(type >= STRAIGHT && is_straight_flush(club, diamond, heart, spade, smask)){
+                                type = STRAIGHT_FLUSH;
+                                break;
+                        }
+                }
+
                 unsigned c = club & 1<<i;
                 unsigned d = diamond & 1<<i;
                 unsigned h = heart & 1<<i;
@@ -115,17 +125,6 @@ static enum hand_t determine_hand(unsigned long long hand){
                                 if(is_foak(c, d, h, s)){
                                         type = FOUR_OF_A_KIND;
                                 }
-                        }
-                }
-
-                // check for straight and straight-flush
-                if(type < STRAIGHT_FLUSH && i < 10){
-                        unsigned smask = 0xF<<i | 1<<((i+4)%13);
-                        if(type < STRAIGHT && is_straight(lump, smask)){
-                                type = STRAIGHT;
-                        }
-                        if(type >= STRAIGHT && is_straight_flush(club, diamond, heart, spade, smask)){
-                                type = STRAIGHT_FLUSH;
                         }
                 }
 
