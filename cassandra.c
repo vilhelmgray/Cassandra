@@ -13,6 +13,7 @@ enum hand_t{
 };
 
 static enum hand_t determine_hand(unsigned long long hand);
+static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triples, unsigned pairs);
@@ -30,96 +31,19 @@ int main(void){
 
         // get beginning hand
         printf("==Beginning Hand==\n");
-        unsigned long long hand = 0x0;
-        char buffer[8];
-        unsigned num = 1;
-        do{
-                printf("Input card #%u: ", num);
-                if(!fgets(buffer, sizeof(buffer), stdin)){
-                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                        continue;
-                }
-
-                unsigned long long card = parse_card(buffer);
-                if(!card){
-                        fprintf(stderr, "ERROR: Unable to parse card.\n");
-                        continue;
-                }else if(!(card&deck)){
-                        printf("This card has already been selected, be choose another.\n");
-                        continue;
-                }
-                
-                hand |= card;
-                deck &= ~card;
-                num++;
-        }while(num < 3);
+        unsigned long long hand = get_card(&deck);
+        hand |= get_card(&deck);
 
         printf("==Flop==\n");
-        unsigned long long flop = 0x0;
-        do{
-                printf("Input card #%u: ", num);
-                if(!fgets(buffer, sizeof(buffer), stdin)){
-                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                        continue;
-                }
-
-                unsigned long long card = parse_card(buffer);
-                if(!card){
-                        fprintf(stderr, "ERROR: Unable to parse card.\n");
-                        continue;
-                }else if(!(card&deck)){
-                        printf("This card has already been selected, be choose another.\n");
-                        continue;
-                }
-                
-                flop |= card;
-                deck &= ~card;
-                num++;
-        }while(num < 6);
+        unsigned long long flop = get_card(&deck);
+        flop |= get_card(&deck);
+        flop |= get_card(&deck);
 
         printf("==Turn==\n");
-        unsigned long long turn = 0x0;
-        do{
-                printf("Input card #%u: ", num);
-                if(!fgets(buffer, sizeof(buffer), stdin)){
-                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                        continue;
-                }
-
-                turn = parse_card(buffer);
-                if(!turn){
-                        fprintf(stderr, "ERROR: Unable to parse card.\n");
-                        continue;
-                }else if(!(turn&deck)){
-                        printf("This card has already been selected, be choose another.\n");
-                        continue;
-                }
-                
-                deck &= ~turn;
-                num++;
-        }while(num < 7);
+        unsigned long long turn = get_card(&deck);
 
         printf("==River==\n");
-        unsigned long long river = 0x0;
-        do{
-                printf("Input card #%u: ", num);
-                if(!fgets(buffer, sizeof(buffer), stdin)){
-                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                        continue;
-                }
-
-                river = parse_card(buffer);
-                if(!river){
-                        fprintf(stderr, "ERROR: Unable to parse card.\n");
-                        continue;
-                }else if(!(river&deck)){
-                        printf("This card has already been selected, be choose another.\n");
-                        continue;
-                }
-                
-                deck &= ~river;
-                num++;
-        }while(num < 8);
+        unsigned long long river = get_card(&deck);
 
         enum hand_t type = determine_hand(hand|flop|turn|river);
 
@@ -205,6 +129,32 @@ static enum hand_t determine_hand(unsigned long long hand){
         }
 
         return HIGH_CARD;
+}
+
+static unsigned long long get_card(unsigned long long *deck){
+        unsigned long long card;
+        do{
+                char buffer[8];
+                printf("Input card: ");
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                card = parse_card(buffer);
+                if(!card){
+                        fprintf(stderr, "ERROR: Unable to parse card.\n");
+                        continue;
+                }else if(!(card & *deck)){
+                        printf("This card has already been selected, be choose another.\n");
+                        continue;
+                }
+
+                break;
+        }while(1);
+
+        *deck &= ~card;
+        return card;
 }
 
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
