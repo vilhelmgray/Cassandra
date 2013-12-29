@@ -12,11 +12,19 @@ enum hand_t{
         STRAIGHT_FLUSH
 };
 
-static enum hand_t determine_hand(unsigned long long hand);
+struct hand{
+        enum hand_t category;
+        unsigned quadruplet;
+        unsigned triplets;
+        unsigned pairs;
+        unsigned rank;
+};
+
+static struct hand determine_hand(unsigned long long hand);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_full_house(unsigned triples, unsigned pairs);
+static unsigned is_full_house(unsigned triplets, unsigned pairs);
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
@@ -44,8 +52,8 @@ int main(void){
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
-        enum hand_t type = determine_hand(hand|flop|turn|river);
-        switch(type){
+        struct hand best_hand = determine_hand(hand|flop|turn|river);
+        switch(best_hand.category){
                 case HIGH_CARD:
                         printf("high card\n");
                         break;
@@ -78,7 +86,7 @@ int main(void){
         return 0;
 }
 
-static enum hand_t determine_hand(unsigned long long hand){
+static struct hand determine_hand(unsigned long long hand){
         enum hand_t type = HIGH_CARD;
 
         unsigned club = hand & 0x1FFF;
@@ -87,22 +95,25 @@ static enum hand_t determine_hand(unsigned long long hand){
         unsigned spade = hand>>39 & 0x1FFF;
 
         unsigned lump = club | diamond | heart | spade;
+        unsigned rank = ((lump&0x1)<<13) | lump;
 
         unsigned pairs = 0;
-        unsigned triples = 0;
+        unsigned triplets = 0;
+        unsigned quadruplet = 0;
 
         for(unsigned i = 0; i < 13; i++){
                 if(i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
 
                         // check for straight
-                        if(type < STRAIGHT && is_straight(lump, smask)){
+                        if(type <= STRAIGHT && is_straight(lump, smask)){
+                                rank = i;
                                 type = STRAIGHT;
                         }
                         // check for straight-flush
                         if(type >= STRAIGHT && is_straight_flush(club, diamond, heart, spade, smask)){
+                                rank = i;
                                 type = STRAIGHT_FLUSH;
-                                break;
                         }
                 }
 
@@ -112,30 +123,48 @@ static enum hand_t determine_hand(unsigned long long hand){
                 unsigned s = spade & 1<<i;
 
                 // check for pair
-                if(type < FULL_HOUSE && is_pair(c, d, h, s)){
+                if(type <= FULL_HOUSE && is_pair(c, d, h, s)){
                         pairs |= 1<<i;
                         type = (type < ONE_PAIR) ? ONE_PAIR : type;
 
                         // check for three-of-a-kind
                         if(is_toak(c, d, h, s)){
-                                triples |= 1<<i;
+                                triplets |= 1<<i;
                                 type = (type < THREE_OF_A_KIND) ? THREE_OF_A_KIND : type;
 
                                 // check for four-of-a-kind
                                 if(is_foak(c, d, h, s)){
+                                        quadruplet = 1<<i;
                                         type = FOUR_OF_A_KIND;
                                 }
                         }
                 }
 
                 // check for flush
-                if(type < FLUSH && is_flush(c, d, h, s)){
+                unsigned suit = 0;
+                if(type <= FLUSH && (suit = is_flush(c, d, h, s))){
+                        switch(suit){
+                                case 1:
+                                        suit = club;
+                                        break;
+                                case 2:
+                                        suit = diamond;
+                                        break;
+                                case 3:
+                                        suit = heart;
+                                        break;
+                                case 4:
+                                        suit = spade;
+                                        break;
+                        }
+                        rank = ((suit&0x1)<<13) | suit;
+
                         type = FLUSH;
                 }
         }
 
         // check for full-house
-        if(type < FULL_HOUSE && is_full_house(triples, pairs)){
+        if(type < FULL_HOUSE && is_full_house(triplets, pairs)){
                 type = FULL_HOUSE;
         }
 
@@ -144,7 +173,13 @@ static enum hand_t determine_hand(unsigned long long hand){
                 type = TWO_PAIR;
         }
 
-        return type;
+        struct hand best_hand = { .category = type,
+                                  .quadruplet = quadruplet,
+                                  .triplets = triplets,
+                                  .pairs = pairs,
+                                  .rank = rank };
+
+        return best_hand;
 }
 
 static unsigned long long get_card(unsigned long long *deck){
@@ -184,8 +219,17 @@ static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s){
         hhits += (h) ? 1 : 0;
         shits += (s) ? 1 : 0;
 
-        if(chits == 5 || dhits == 5 || hhits == 5 || shits == 5){
+        if(chits == 5){
                 return 1;
+        }
+        if(dhits == 5){
+                return 2;
+        }
+        if(hhits == 5){
+                return 3;
+        }
+        if(shits == 5){
+                return 4;
         }
 
         return 0;
@@ -199,10 +243,10 @@ static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s){
         return 0;
 }
 
-static unsigned is_full_house(unsigned triples, unsigned pairs){
-        if(triples){
+static unsigned is_full_house(unsigned triplets, unsigned pairs){
+        if(triplets){
                 for(unsigned i = 0; i < 13; i++){
-                        if(triples & 1<<i && pairs & ~(1U<<i)){
+                        if(triplets & 1<<i && pairs & ~(1U<<i)){
                                 return 1;
                         }
                 }
