@@ -41,43 +41,46 @@ unsigned long long f = 0;
 unsigned long long fh = 0;
 unsigned long long fok = 0;
 unsigned long long sf = 0;
-static void combin(unsigned long long hand, unsigned long long totCards, unsigned long long numCards, unsigned long long x){
+static void combin(unsigned long long community, unsigned long long hand, unsigned long long totCards, unsigned long long numCards, unsigned long long x, struct hand curr_hand, unsigned long long deck){
         unsigned long long y = x<<1;
         for(unsigned long long i = 0; i < totCards; i++){
                 if(numCards-1){
-                        combin(x|hand, totCards-1-i, numCards-1, y<<i);
+                        combin(community, x|hand, totCards-1-i, numCards-1, y<<i, curr_hand, deck);
                 }else{
                         unsigned long long z = x|hand;
-
-                        struct hand best_hand = determine_hand(z);
-                        switch(best_hand.category){
-                                case HIGH_CARD:
-                                        hc++;
-                                        break;
-                                case ONE_PAIR:
-                                        op++;
-                                        break;
-                                case TWO_PAIR:
-                                        tp++;
-                                        break;
-                                case THREE_OF_A_KIND:
-                                        tok++;
-                                        break;
-                                case STRAIGHT:
-                                        s++;
-                                        break;
-                                case FLUSH:
-                                        f++;
-                                        break;
-                                case FULL_HOUSE:
-                                        fh++;
-                                        break;
-                                case FOUR_OF_A_KIND:
-                                        fok++;
-                                        break;
-                                case STRAIGHT_FLUSH:
-                                        sf++;
-                                        break;
+                        if((z & deck) == z){
+                                struct hand best_hand = determine_hand(z|community);
+                                if(best_hand.category >= curr_hand.category){
+                                        switch(best_hand.category){
+                                                case HIGH_CARD:
+                                                        hc++;
+                                                        break;
+                                                case ONE_PAIR:
+                                                        op++;
+                                                        break;
+                                                case TWO_PAIR:
+                                                        tp++;
+                                                        break;
+                                                case THREE_OF_A_KIND:
+                                                        tok++;
+                                                        break;
+                                                case STRAIGHT:
+                                                        s++;
+                                                        break;
+                                                case FLUSH:
+                                                        f++;
+                                                        break;
+                                                case FULL_HOUSE:
+                                                        fh++;
+                                                        break;
+                                                case FOUR_OF_A_KIND:
+                                                        fok++;
+                                                        break;
+                                                case STRAIGHT_FLUSH:
+                                                        sf++;
+                                                        break;
+                                        }
+                                }
                         }
 
                 }
@@ -90,18 +93,19 @@ int main(void){
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
         
-        combin(0, 52, 7, 1);
+        struct hand curr_hand = { .category = HIGH_CARD };
+        //combin(0, 52, 7, 1, curr_hand, deck);
 
-        printf("SF:\t%llu\n"
-               "FOK:\t%llu\n"
-               "FH:\t%llu\n"
-               "F:\t%llu\n"
-               "S:\t%llu\n"
-               "TOK:\t%llu\n"
-               "TP:\t%llu\n"
-               "OP:\t%llu\n"
-               "HC:\t%llu\n",
-        sf, fok, fh, f, s, tok, tp, op, hc);
+        //printf("SF:\t%llu\n"
+        //       "FOK:\t%llu\n"
+        //       "FH:\t%llu\n"
+        //       "F:\t%llu\n"
+        //       "S:\t%llu\n"
+        //       "TOK:\t%llu\n"
+        //       "TP:\t%llu\n"
+        //       "OP:\t%llu\n"
+        //       "HC:\t%llu\n",
+        //sf, fok, fh, f, s, tok, tp, op, hc);
 
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
@@ -148,6 +152,19 @@ int main(void){
                         printf("straight flush\n");
                         break;
         }
+
+        combin(flop|turn|river, 0, 52, 2, 1, best_hand, deck);
+
+        printf("SF:\t%llu\n"
+               "FOK:\t%llu\n"
+               "FH:\t%llu\n"
+               "F:\t%llu\n"
+               "S:\t%llu\n"
+               "TOK:\t%llu\n"
+               "TP:\t%llu\n"
+               "OP:\t%llu\n"
+               "HC:\t%llu\n",
+        sf, fok, fh, f, s, tok, tp, op, hc);
 
         return 0;
 }
