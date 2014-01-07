@@ -22,7 +22,7 @@ struct hand{
 
 static struct hand determine_hand(unsigned long long hand);
 static unsigned long long get_card(unsigned long long *deck);
-static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triplets, unsigned pairs);
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
@@ -101,6 +101,11 @@ static struct hand determine_hand(unsigned long long hand){
         unsigned triplets = 0;
         unsigned quadruplet = 0;
 
+        unsigned chits = 0;
+        unsigned dhits = 0;
+        unsigned hhits = 0;
+        unsigned shits = 0;
+
         for(unsigned i = 0; i < 13; i++){
                 if(i < 10){
                         unsigned smask = 0xF<<i | 1<<((i+4)%13);
@@ -141,8 +146,12 @@ static struct hand determine_hand(unsigned long long hand){
                 }
 
                 // check for flush
+                chits += (c) ? 1 : 0;
+                dhits += (d) ? 1 : 0;
+                hhits += (h) ? 1 : 0;
+                shits += (s) ? 1 : 0;
                 unsigned suit = 0;
-                if(type <= FLUSH && (suit = is_flush(c, d, h, s))){
+                if(type <= FLUSH && (suit = is_flush(chits, dhits, hhits, shits))){
                         switch(suit){
                                 case 1:
                                         suit = club;
@@ -208,17 +217,7 @@ static unsigned long long get_card(unsigned long long *deck){
         return card;
 }
 
-static unsigned is_flush(unsigned c, unsigned d, unsigned h, unsigned s){
-        static unsigned chits = 0;
-        static unsigned dhits = 0;
-        static unsigned hhits = 0;
-        static unsigned shits = 0;
-
-        chits += (c) ? 1 : 0;
-        dhits += (d) ? 1 : 0;
-        hhits += (h) ? 1 : 0;
-        shits += (s) ? 1 : 0;
-
+static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
         if(chits == 5){
                 return 1;
         }
