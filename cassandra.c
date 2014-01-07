@@ -32,10 +32,76 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
 static unsigned long long parse_card(const char *card_str);
 
+unsigned long long hc = 0;
+unsigned long long op = 0;
+unsigned long long tp = 0;
+unsigned long long tok = 0;
+unsigned long long s = 0;
+unsigned long long f = 0;
+unsigned long long fh = 0;
+unsigned long long fok = 0;
+unsigned long long sf = 0;
+static void combin(unsigned long long hand, unsigned long long totCards, unsigned long long numCards, unsigned long long x){
+        unsigned long long y = x<<1;
+        for(unsigned long long i = 0; i < totCards; i++){
+                if(numCards-1){
+                        combin(x|hand, totCards-1-i, numCards-1, y<<i);
+                }else{
+                        unsigned long long z = x|hand;
+
+                        struct hand best_hand = determine_hand(z);
+                        switch(best_hand.category){
+                                case HIGH_CARD:
+                                        hc++;
+                                        break;
+                                case ONE_PAIR:
+                                        op++;
+                                        break;
+                                case TWO_PAIR:
+                                        tp++;
+                                        break;
+                                case THREE_OF_A_KIND:
+                                        tok++;
+                                        break;
+                                case STRAIGHT:
+                                        s++;
+                                        break;
+                                case FLUSH:
+                                        f++;
+                                        break;
+                                case FULL_HOUSE:
+                                        fh++;
+                                        break;
+                                case FOUR_OF_A_KIND:
+                                        fok++;
+                                        break;
+                                case STRAIGHT_FLUSH:
+                                        sf++;
+                                        break;
+                        }
+
+                }
+                x <<= 1;
+        }
+}
+
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
+        
+        combin(0, 52, 7, 1);
+
+        printf("SF:\t%llu\n"
+               "FOK:\t%llu\n"
+               "FH:\t%llu\n"
+               "F:\t%llu\n"
+               "S:\t%llu\n"
+               "TOK:\t%llu\n"
+               "TP:\t%llu\n"
+               "OP:\t%llu\n"
+               "HC:\t%llu\n",
+        sf, fok, fh, f, s, tok, tp, op, hc);
 
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
