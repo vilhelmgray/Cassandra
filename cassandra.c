@@ -88,6 +88,20 @@ static void combin(unsigned long long community, unsigned long long hand, unsign
         }
 }
 
+static unsigned find_extrema(unsigned lump, unsigned num){
+        unsigned extrema = 0;
+
+        for(int i = 12; num && i >= 0; i--){
+                unsigned card = 0x1U << i;
+                if(lump & card){
+                        extrema |= card;
+                        num--;
+                }
+        }
+
+        return extrema;
+}
+
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
          * playing card deck. Every 13 bits represents a suit. */
@@ -178,7 +192,8 @@ static struct hand determine_hand(unsigned long long hand){
         unsigned spade = hand>>39 & 0x1FFF;
 
         unsigned lump = club | diamond | heart | spade;
-        unsigned rank = ((lump&0x1)<<13) | lump;
+        unsigned rank = (lump>>1) | ((lump&0x1)<<12);
+        rank = find_extrema(rank, 5);
 
         unsigned pairs = 0;
         unsigned triplets = 0;
@@ -213,17 +228,33 @@ static struct hand determine_hand(unsigned long long hand){
                 // check for pair
                 if(type <= FULL_HOUSE && is_pair(c, d, h, s)){
                         pairs |= 1<<i;
-                        type = (type < ONE_PAIR) ? ONE_PAIR : type;
+                        if(type < ONE_PAIR){
+                                type = ONE_PAIR;
+
+                                unsigned normalize = lump & (~pairs);
+                                normalize = (normalize>>1) | ((normalize&0x1)<<12);
+                                rank = find_extrema(normalize, 3);
+                        }
 
                         // check for three-of-a-kind
                         if(is_toak(c, d, h, s)){
                                 triplets |= 1<<i;
-                                type = (type < THREE_OF_A_KIND) ? THREE_OF_A_KIND : type;
+                                if(type < THREE_OF_A_KIND){
+                                        type = THREE_OF_A_KIND;
+
+                                        unsigned normalize = lump & (~triplets);
+                                        normalize = (normalize>>1) | ((normalize&0x1)<<12);
+                                        rank = find_extrema(normalize, 2);
+                                }
 
                                 // check for four-of-a-kind
                                 if(is_foak(c, d, h, s)){
                                         quadruplet = 1<<i;
                                         type = FOUR_OF_A_KIND;
+
+                                        unsigned normalize = lump & (~quadruplet);
+                                        normalize = (normalize>>1) | ((normalize&0x1)<<12);
+                                        rank = find_extrema(normalize, 1);
                                 }
                         }
                 }
@@ -263,12 +294,16 @@ static struct hand determine_hand(unsigned long long hand){
         // check for two pair
         if(type < TWO_PAIR && is_two_pair(pairs)){
                 type = TWO_PAIR;
+
+                unsigned normalize = lump & (~pairs);
+                normalize = (normalize>>1) | ((normalize&0x1)<<12);
+                rank = find_extrema(normalize, 1);
         }
 
         struct hand best_hand = { .category = type,
-                                  .quadruplet = quadruplet,
-                                  .triplets = triplets,
-                                  .pairs = pairs,
+                                  .quadruplet = (quadruplet>>1) | ((quadruplet&0x1)<<12),
+                                  .triplets = (triplets>>1) | ((triplets&0x1)<<12),
+                                  .pairs = (pairs>>1) | ((pairs&0x1)<<12),
                                   .rank = rank };
 
         return best_hand;
