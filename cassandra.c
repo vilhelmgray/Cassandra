@@ -41,17 +41,17 @@ unsigned long long f = 0;
 unsigned long long fh = 0;
 unsigned long long fok = 0;
 unsigned long long sf = 0;
-static void combin(unsigned long long community, unsigned long long hand, unsigned long long totCards, unsigned long long numCards, unsigned long long x, struct hand curr_hand, unsigned long long deck){
+static void combin(unsigned long long community, unsigned long long hand, unsigned totCards, unsigned numCards, unsigned long long x, struct hand best_hand, unsigned long long deck){
         unsigned long long y = x<<1;
-        for(unsigned long long i = 0; i < totCards; i++){
+        for(unsigned i = 0; i < totCards; i++){
                 if(numCards-1){
-                        combin(community, x|hand, totCards-1-i, numCards-1, y<<i, curr_hand, deck);
+                        combin(community, x|hand, totCards-1-i, numCards-1, y<<i, best_hand, deck);
                 }else{
                         unsigned long long z = x|hand;
                         if((z & deck) == z){
-                                struct hand best_hand = determine_hand(z|community);
-                                if(best_hand.category >= curr_hand.category){
-                                        switch(best_hand.category){
+                                struct hand curr_hand = determine_hand(z|community);
+                                if(curr_hand.category >= best_hand.category){
+                                        switch(curr_hand.category){
                                                 case HIGH_CARD:
                                                         hc++;
                                                         break;
@@ -107,8 +107,8 @@ int main(void){
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
         
-        struct hand curr_hand = { .category = HIGH_CARD };
-        //combin(0, 52, 7, 1, curr_hand, deck);
+        //struct hand curr_hand = { .category = HIGH_CARD };
+        //combin(0, 0, 52, 7, 1, curr_hand, deck);
 
         //printf("SF:\t%llu\n"
         //       "FOK:\t%llu\n"
