@@ -41,17 +41,22 @@ unsigned long long f = 0;
 unsigned long long fh = 0;
 unsigned long long fok = 0;
 unsigned long long sf = 0;
-static void combin(unsigned long long community, unsigned long long hand, unsigned totCards, unsigned numCards, unsigned long long x, struct hand best_hand, unsigned long long deck){
-        unsigned long long y = x<<1;
+
+static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck){
+        numCards--;
+
+        unsigned long long currCard = 1ULL << numCards;
+        totCards -= numCards;
+
         for(unsigned i = 0; i < totCards; i++){
-                if(numCards-1){
-                        combin(community, x|hand, totCards-1-i, numCards-1, y<<i, best_hand, deck);
+                if(numCards){
+                        combine(numCards+i, numCards, currCard|hand, community, best_hand, deck);
                 }else{
-                        unsigned long long z = x|hand;
-                        if((z & deck) == z){
-                                struct hand curr_hand = determine_hand(z|community);
-                                if(curr_hand.category >= best_hand.category){
-                                        switch(curr_hand.category){
+                        unsigned long long currHand = currCard | hand;
+                        if((currHand & deck) == currHand){
+                                struct hand test_hand = determine_hand(currHand|community);
+                                if(test_hand.category >= best_hand.category){
+                                        switch(test_hand.category){
                                                 case HIGH_CARD:
                                                         hc++;
                                                         break;
@@ -82,9 +87,9 @@ static void combin(unsigned long long community, unsigned long long hand, unsign
                                         }
                                 }
                         }
-
                 }
-                x <<= 1;
+
+                currCard <<= 1;
         }
 }
 
@@ -107,20 +112,6 @@ int main(void){
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
         
-        //struct hand curr_hand = { .category = HIGH_CARD };
-        //combin(0, 0, 52, 7, 1, curr_hand, deck);
-
-        //printf("SF:\t%llu\n"
-        //       "FOK:\t%llu\n"
-        //       "FH:\t%llu\n"
-        //       "F:\t%llu\n"
-        //       "S:\t%llu\n"
-        //       "TOK:\t%llu\n"
-        //       "TP:\t%llu\n"
-        //       "OP:\t%llu\n"
-        //       "HC:\t%llu\n",
-        //sf, fok, fh, f, s, tok, tp, op, hc);
-
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
@@ -167,7 +158,7 @@ int main(void){
                         break;
         }
 
-        combin(flop|turn|river, 0, 52, 2, 1, best_hand, deck);
+        combine(52, 2, 0, flop|turn|river, best_hand, deck);
 
         printf("SF:\t%llu\n"
                "FOK:\t%llu\n"
