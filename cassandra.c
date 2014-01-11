@@ -1,5 +1,15 @@
 #include <stdio.h>
 
+unsigned long long hc = 0;
+unsigned long long op = 0;
+unsigned long long tp = 0;
+unsigned long long tok = 0;
+unsigned long long s = 0;
+unsigned long long f = 0;
+unsigned long long fh = 0;
+unsigned long long fok = 0;
+unsigned long long sf = 0;
+
 enum hand_t{
         HIGH_CARD,
         ONE_PAIR,
@@ -20,7 +30,9 @@ struct hand{
         unsigned rank;
 };
 
+static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
+static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
@@ -31,81 +43,6 @@ static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned hear
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
 static unsigned long long parse_card(const char *card_str);
-
-unsigned long long hc = 0;
-unsigned long long op = 0;
-unsigned long long tp = 0;
-unsigned long long tok = 0;
-unsigned long long s = 0;
-unsigned long long f = 0;
-unsigned long long fh = 0;
-unsigned long long fok = 0;
-unsigned long long sf = 0;
-
-static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck){
-        numCards--;
-
-        unsigned long long currCard = 1ULL << numCards;
-        totCards -= numCards;
-
-        for(unsigned i = 0; i < totCards; i++){
-                if(numCards){
-                        combine(numCards+i, numCards, currCard|hand, community, best_hand, deck);
-                }else{
-                        unsigned long long currHand = currCard | hand;
-                        if((currHand & deck) == currHand){
-                                struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category >= best_hand.category){
-                                        switch(test_hand.category){
-                                                case HIGH_CARD:
-                                                        hc++;
-                                                        break;
-                                                case ONE_PAIR:
-                                                        op++;
-                                                        break;
-                                                case TWO_PAIR:
-                                                        tp++;
-                                                        break;
-                                                case THREE_OF_A_KIND:
-                                                        tok++;
-                                                        break;
-                                                case STRAIGHT:
-                                                        s++;
-                                                        break;
-                                                case FLUSH:
-                                                        f++;
-                                                        break;
-                                                case FULL_HOUSE:
-                                                        fh++;
-                                                        break;
-                                                case FOUR_OF_A_KIND:
-                                                        fok++;
-                                                        break;
-                                                case STRAIGHT_FLUSH:
-                                                        sf++;
-                                                        break;
-                                        }
-                                }
-                        }
-                }
-
-                currCard <<= 1;
-        }
-}
-
-static unsigned find_extrema(unsigned lump, unsigned num){
-        unsigned extrema = 0;
-
-        for(int i = 12; num && i >= 0; i--){
-                unsigned card = 0x1U << i;
-                if(lump & card){
-                        extrema |= card;
-                        num--;
-                }
-        }
-
-        return extrema;
-}
 
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
@@ -172,6 +109,57 @@ int main(void){
         sf, fok, fh, f, s, tok, tp, op, hc);
 
         return 0;
+}
+
+static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck){
+        numCards--;
+
+        unsigned long long currCard = 1ULL << numCards;
+        totCards -= numCards;
+
+        for(unsigned i = 0; i < totCards; i++){
+                if(numCards){
+                        combine(numCards+i, numCards, currCard|hand, community, best_hand, deck);
+                }else{
+                        unsigned long long currHand = currCard | hand;
+                        if((currHand & deck) == currHand){
+                                struct hand test_hand = determine_hand(currHand|community);
+                                if(test_hand.category >= best_hand.category){
+                                        switch(test_hand.category){
+                                                case HIGH_CARD:
+                                                        hc++;
+                                                        break;
+                                                case ONE_PAIR:
+                                                        op++;
+                                                        break;
+                                                case TWO_PAIR:
+                                                        tp++;
+                                                        break;
+                                                case THREE_OF_A_KIND:
+                                                        tok++;
+                                                        break;
+                                                case STRAIGHT:
+                                                        s++;
+                                                        break;
+                                                case FLUSH:
+                                                        f++;
+                                                        break;
+                                                case FULL_HOUSE:
+                                                        fh++;
+                                                        break;
+                                                case FOUR_OF_A_KIND:
+                                                        fok++;
+                                                        break;
+                                                case STRAIGHT_FLUSH:
+                                                        sf++;
+                                                        break;
+                                        }
+                                }
+                        }
+                }
+
+                currCard <<= 1;
+        }
 }
 
 static struct hand determine_hand(unsigned long long hand){
@@ -298,6 +286,20 @@ static struct hand determine_hand(unsigned long long hand){
                                   .rank = rank };
 
         return best_hand;
+}
+
+static unsigned find_extrema(unsigned lump, unsigned num){
+        unsigned extrema = 0;
+
+        for(int i = 12; num && i >= 0; i--){
+                unsigned card = 0x1U << i;
+                if(lump & card){
+                        extrema |= card;
+                        num--;
+                }
+        }
+
+        return extrema;
 }
 
 static unsigned long long get_card(unsigned long long *deck){
