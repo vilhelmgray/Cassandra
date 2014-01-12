@@ -280,7 +280,7 @@ static unsigned long long get_card(unsigned long long *deck){
                         fprintf(stderr, "ERROR: Unable to parse card.\n");
                         continue;
                 }else if(!(card & *deck)){
-                        printf("This card has already been selected, be choose another.\n");
+                        printf("ATTENTION: This card has already been selected, please choose another.\n");
                         continue;
                 }
 
