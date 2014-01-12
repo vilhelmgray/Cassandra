@@ -1,5 +1,10 @@
 #include <stdio.h>
 
+static const unsigned long HAND_COMB = 99884400UL;
+static const unsigned long FLOP_COMB = 178365UL;
+static const unsigned TURN_COMB = 15180;
+static const unsigned RIVER_COMB = 990;
+
 enum hand_t{
         HIGH_CARD,
         ONE_PAIR,
@@ -37,10 +42,6 @@ static unsigned long long parse_card(const char *card_str);
 
 static unsigned long lose = 0;
 static unsigned long split = 0;
-static const unsigned long HAND_COMB = 99884400UL;
-static const unsigned long FLOP_COMB = 178365UL;
-static const unsigned TURN_COMB = 15180;
-static const unsigned RIVER_COMB = 990;
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
 
