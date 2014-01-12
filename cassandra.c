@@ -37,7 +37,10 @@ static unsigned long long parse_card(const char *card_str);
 
 static unsigned long lose = 0;
 static unsigned long split = 0;
-static const unsigned long TOT_COMB= 133784560UL;
+static const unsigned long HAND_COMB = 99884400UL;
+static const unsigned long FLOP_COMB = 178365UL;
+static const unsigned TURN_COMB = 15180;
+static const unsigned RIVER_COMB = 990;
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
 
@@ -52,9 +55,9 @@ int main(void){
         }else{
                 curr_hand.rank = find_extrema(curr_hand.rank, 5);
         }
-
         combine(52, 7, 0, 0, curr_hand, deck);
-        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+
+        printf("Ratio: %lf\n", (double)(lose+split)/HAND_COMB);
         lose = 0;
         split = 0;
 
@@ -66,7 +69,7 @@ int main(void){
         curr_hand = determine_hand(hand|flop);
         combine(52, 4, 0, flop, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        printf("Ratio: %lf\n", (double)(lose+split)/FLOP_COMB);
         lose = 0;
         split = 0;
 
@@ -76,7 +79,7 @@ int main(void){
         curr_hand = determine_hand(hand|flop|turn);
         combine(52, 3, 0, flop|turn, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        printf("Ratio: %lf\n", (double)(lose+split)/TURN_COMB);
         lose = 0;
         split = 0;
 
@@ -86,7 +89,7 @@ int main(void){
         curr_hand = determine_hand(hand|flop|turn|river);
         combine(52, 2, 0, flop|turn|river, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        printf("Ratio: %lf\n", (double)(lose+split)/RIVER_COMB);
         lose = 0;
         split = 0;
 
