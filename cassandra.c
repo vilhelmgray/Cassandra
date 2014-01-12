@@ -47,7 +47,12 @@ int main(void){
         hand |= get_card(&deck);
 
         struct hand curr_hand = determine_hand(hand);
-        curr_hand.rank |= get_worst_rank(deck, hand, 3);
+        curr_hand.rank |= get_worst_rank(deck, hand, 5);
+        if(curr_hand.category == ONE_PAIR){
+                curr_hand.rank = find_extrema(curr_hand.rank, 3);
+        }else{
+                curr_hand.rank = find_extrema(curr_hand.rank, 5);
+        }
 
         combine(52, 7, 0, 0, curr_hand, deck);
 
@@ -288,7 +293,7 @@ static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand,
                 unsigned isCardFree = lump & card;
                 unsigned curr_hand = handLump | rank | card;
 
-                if(isCardFree && ((curr_hand&0x1F) != 0x1F)){
+                if(isCardFree && ((curr_hand&0x1F) != 0x1F) && ((curr_hand&0x3E) != 0x3E) && ((curr_hand&0x7C) != 0x7C)){
                         rank |= card;
                         cardsLeft--;
                 }
