@@ -37,9 +37,8 @@ static unsigned long long parse_card(const char *card_str);
 
 static unsigned long lose = 0;
 static unsigned long split = 0;
+static const unsigned long TOT_COMB= 133784560UL;
 int main(void){
-        /* Each bit represents a unique card in a standard 52-card
-         * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
 
         printf("==Beginning Hand==\n");
@@ -55,8 +54,7 @@ int main(void){
         }
 
         combine(52, 7, 0, 0, curr_hand, deck);
-
-        printf("Lose: %lu\nSplit: %lu\n", lose, split);
+        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
         lose = 0;
         split = 0;
 
@@ -65,15 +63,32 @@ int main(void){
         flop |= get_card(&deck);
         flop |= get_card(&deck);
 
+        curr_hand = determine_hand(hand|flop);
+        combine(52, 4, 0, flop, curr_hand, deck);
+
+        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        lose = 0;
+        split = 0;
+
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
+
+        curr_hand = determine_hand(hand|flop|turn);
+        combine(52, 3, 0, flop|turn, curr_hand, deck);
+
+        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        lose = 0;
+        split = 0;
 
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
         curr_hand = determine_hand(hand|flop|turn|river);
-
         combine(52, 2, 0, flop|turn|river, curr_hand, deck);
+
+        printf("Ratio: %lf\n", (double)(lose+split)/TOT_COMB);
+        lose = 0;
+        split = 0;
 
         return 0;
 }
