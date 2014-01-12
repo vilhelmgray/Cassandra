@@ -1,15 +1,5 @@
 #include <stdio.h>
 
-unsigned long long hc = 0;
-unsigned long long op = 0;
-unsigned long long tp = 0;
-unsigned long long tok = 0;
-unsigned long long s = 0;
-unsigned long long f = 0;
-unsigned long long fh = 0;
-unsigned long long fok = 0;
-unsigned long long sf = 0;
-
 enum hand_t{
         HIGH_CARD,
         ONE_PAIR,
@@ -45,6 +35,8 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
 static unsigned long long parse_card(const char *card_str);
 
+static unsigned long lose = 0;
+static unsigned long split = 0;
 int main(void){
         /* Each bit represents a unique card in a standard 52-card
          * playing card deck. Every 13 bits represents a suit. */
@@ -56,6 +48,12 @@ int main(void){
 
         struct hand curr_hand = determine_hand(hand);
         curr_hand.rank |= get_worst_rank(deck, hand, 3);
+
+        combine(52, 7, 0, 0, curr_hand, deck);
+
+        printf("Lose: %lu\nSplit: %lu\n", lose, split);
+        lose = 0;
+        split = 0;
 
         printf("==Flop==\n");
         unsigned long long flop = get_card(&deck);
@@ -71,17 +69,6 @@ int main(void){
         curr_hand = determine_hand(hand|flop|turn|river);
 
         combine(52, 2, 0, flop|turn|river, curr_hand, deck);
-
-        printf("SF:\t%llu\n"
-               "FOK:\t%llu\n"
-               "FH:\t%llu\n"
-               "F:\t%llu\n"
-               "S:\t%llu\n"
-               "TOK:\t%llu\n"
-               "TP:\t%llu\n"
-               "OP:\t%llu\n"
-               "HC:\t%llu\n",
-        sf, fok, fh, f, s, tok, tp, op, hc);
 
         return 0;
 }
@@ -99,35 +86,13 @@ static void combine(unsigned totCards, unsigned numCards, unsigned long long han
                         unsigned long long currHand = currCard | hand;
                         if((currHand & deck) == currHand){
                                 struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category >= best_hand.category){
-                                        switch(test_hand.category){
-                                                case HIGH_CARD:
-                                                        hc++;
-                                                        break;
-                                                case ONE_PAIR:
-                                                        op++;
-                                                        break;
-                                                case TWO_PAIR:
-                                                        tp++;
-                                                        break;
-                                                case THREE_OF_A_KIND:
-                                                        tok++;
-                                                        break;
-                                                case STRAIGHT:
-                                                        s++;
-                                                        break;
-                                                case FLUSH:
-                                                        f++;
-                                                        break;
-                                                case FULL_HOUSE:
-                                                        fh++;
-                                                        break;
-                                                case FOUR_OF_A_KIND:
-                                                        fok++;
-                                                        break;
-                                                case STRAIGHT_FLUSH:
-                                                        sf++;
-                                                        break;
+                                if(test_hand.category > best_hand.category){
+                                        lose++;
+                                }else if(test_hand.category == best_hand.category){
+                                        if(test_hand.rank > best_hand.rank){
+                                                lose++;
+                                        }else if(test_hand.rank == best_hand.rank){
+                                                split++;
                                         }
                                 }
                         }
