@@ -34,6 +34,7 @@ static void combine(unsigned totCards, unsigned numCards, unsigned long long han
 static struct hand determine_hand(unsigned long long hand);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
+static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triplets, unsigned pairs);
@@ -48,10 +49,13 @@ int main(void){
         /* Each bit represents a unique card in a standard 52-card
          * playing card deck. Every 13 bits represents a suit. */
         unsigned long long deck = 0xFFFFFFFFFFFFF;
-        
+
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
+
+        struct hand curr_hand = determine_hand(hand);
+        curr_hand.rank |= get_worst_rank(deck, hand, 3);
 
         printf("==Flop==\n");
         unsigned long long flop = get_card(&deck);
@@ -64,38 +68,9 @@ int main(void){
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
-        struct hand best_hand = determine_hand(hand|flop|turn|river);
-        switch(best_hand.category){
-                case HIGH_CARD:
-                        printf("high card\n");
-                        break;
-                case ONE_PAIR:
-                        printf("one pair\n");
-                        break;
-                case TWO_PAIR:
-                        printf("two pair\n");
-                        break;
-                case THREE_OF_A_KIND:
-                        printf("three of a kind\n");
-                        break;
-                case STRAIGHT:
-                        printf("straight\n");
-                        break;
-                case FLUSH:
-                        printf("flush\n");
-                        break;
-                case FULL_HOUSE:
-                        printf("full house\n");
-                        break;
-                case FOUR_OF_A_KIND:
-                        printf("four of a kind\n");
-                        break;
-                case STRAIGHT_FLUSH:
-                        printf("straight flush\n");
-                        break;
-        }
+        curr_hand = determine_hand(hand|flop|turn|river);
 
-        combine(52, 2, 0, flop|turn|river, best_hand, deck);
+        combine(52, 2, 0, flop|turn|river, curr_hand, deck);
 
         printf("SF:\t%llu\n"
                "FOK:\t%llu\n"
@@ -326,6 +301,37 @@ static unsigned long long get_card(unsigned long long *deck){
 
         *deck &= ~card;
         return card;
+}
+
+static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft){
+        unsigned rank = 0;
+
+        unsigned club = deck & 0x1FFF;
+        unsigned diamond = deck>>13 & 0x1FFF;
+        unsigned heart = deck>>26 & 0x1FFF;
+        unsigned spade = deck>>39 & 0x1FFF;
+        unsigned lump = (club & diamond & heart & spade)>>1;
+
+        unsigned c = hand & 0x1FFF;
+        unsigned d = hand>>13 & 0x1FFF;
+        unsigned h = hand>>26 & 0x1FFF;
+        unsigned s = hand>>39 & 0x1FFF;
+        unsigned handLump = (c | d | h | s)>>1;
+
+        unsigned card = 0x1;
+        do{
+                unsigned isCardFree = lump & card;
+                unsigned curr_hand = handLump | rank | card;
+
+                if(isCardFree && ((curr_hand&0x1F) != 0x1F)){
+                        rank |= card;
+                        cardsLeft--;
+                }
+
+                card <<= 1;
+        }while(cardsLeft);
+
+        return rank;
 }
 
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
