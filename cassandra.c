@@ -40,6 +40,7 @@ static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
+static double kelly(double p, double b);
 static unsigned long long parse_card(const char *card_str);
 
 static unsigned long lose = 0;
@@ -512,6 +513,10 @@ static unsigned is_two_pair(unsigned pairs){
         }
 
         return 0;
+}
+
+static double kelly(double p, double b){
+        return (p*(b+1) - 1)/b;
 }
 
 static unsigned long long parse_card(const char *card_str){
