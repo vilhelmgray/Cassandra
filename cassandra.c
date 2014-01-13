@@ -25,8 +25,10 @@ struct hand{
         unsigned rank;
 };
 
+static unsigned betting_round(unsigned numPlayers);
 static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
+static unsigned evaluate_opponents(unsigned *pot);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft);
@@ -44,6 +46,25 @@ static unsigned long lose = 0;
 static unsigned long split = 0;
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
+        unsigned pot = 0;
+
+        unsigned bankroll;
+        do{
+                char buffer[8];
+                printf("Bankroll: ");
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                int retval = sscanf(buffer, "%u", &bankroll);
+                if(retval < 1){
+                        fprintf(stderr, "ERROR: Unable to parse input.\n");
+                        continue;
+                }
+
+                break;
+        }while(1);
 
         printf("==Beginning Hand==\n");
         unsigned long long hand = get_card(&deck);
@@ -58,9 +79,13 @@ int main(void){
         }
         combine(52, 7, 0, 0, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/HAND_COMB);
+        double losing_prob = (double)(lose+split)/HAND_COMB;
+        printf("Ratio: %lf\n", losing_prob);
         lose = 0;
         split = 0;
+
+        unsigned numOpponents = evaluate_opponents(&pot);
+        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Flop==\n");
         unsigned long long flop = get_card(&deck);
@@ -70,9 +95,13 @@ int main(void){
         curr_hand = determine_hand(hand|flop);
         combine(52, 4, 0, flop, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/FLOP_COMB);
+        losing_prob = (double)(lose+split)/FLOP_COMB;
+        printf("Ratio: %lf\n", losing_prob);
         lose = 0;
         split = 0;
+
+        numOpponents = evaluate_opponents(&pot);
+        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
@@ -80,9 +109,13 @@ int main(void){
         curr_hand = determine_hand(hand|flop|turn);
         combine(52, 3, 0, flop|turn, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/TURN_COMB);
+        losing_prob = (double)(lose+split)/TURN_COMB;
+        printf("Ratio: %lf\n", losing_prob);
         lose = 0;
         split = 0;
+
+        numOpponents = evaluate_opponents(&pot);
+        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
@@ -90,11 +123,40 @@ int main(void){
         curr_hand = determine_hand(hand|flop|turn|river);
         combine(52, 2, 0, flop|turn|river, curr_hand, deck);
 
-        printf("Ratio: %lf\n", (double)(lose+split)/RIVER_COMB);
+        losing_prob = (double)(lose+split)/RIVER_COMB;
+        printf("Ratio: %lf\n", losing_prob);
         lose = 0;
         split = 0;
 
+        numOpponents = evaluate_opponents(&pot);
+        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
+
         return 0;
+}
+
+static unsigned betting_round(unsigned numPlayers){
+        unsigned pot = 0;
+
+        while(numPlayers){
+                char buffer[8];
+                printf("Player #%d: ", numPlayers);
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                unsigned bet;
+                int retval = sscanf(buffer, "%u", &bet);
+                if(retval < 1){
+                        fprintf(stderr, "ERROR: Unable to parse input.\n");
+                        continue;
+                }
+
+                pot += bet;
+                numPlayers--;
+        }
+
+        return pot;
 }
 
 static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck){
@@ -250,6 +312,54 @@ static struct hand determine_hand(unsigned long long hand){
                                   .rank = rank };
 
         return best_hand;
+}
+
+static unsigned evaluate_opponents(unsigned *pot){
+        unsigned numOpponents = 0;
+
+        do{
+                char buffer[8];
+                printf("Number of Opponents: ");
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                int retval = sscanf(buffer, "%u", &numOpponents);
+                if(retval < 1){
+                        fprintf(stderr, "ERROR: Unable to parse input.\n");
+                        continue;
+                }
+
+                if(numOpponents){
+                        *pot += betting_round(numOpponents);
+
+                        char repeat;
+                        do{
+                                printf("Repeat: ");
+                                if(!fgets(buffer, sizeof(buffer), stdin)){
+                                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                                        continue;
+                                }
+
+                                int retval = sscanf(buffer, " %c", &repeat);
+                                if(retval < 1){
+                                        fprintf(stderr, "ERROR: Unable to parse input.\n");
+                                        continue;
+                                }
+
+                                break;
+                        }while(1);
+
+                        if(repeat == 'y' || repeat == 'Y'){
+                                continue;
+                        }
+                }
+                
+                break;
+        }while(1);
+
+        return numOpponents;
 }
 
 static unsigned find_extrema(unsigned lump, unsigned num){
