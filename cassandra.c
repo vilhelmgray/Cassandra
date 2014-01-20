@@ -31,6 +31,7 @@ static struct hand determine_hand(unsigned long long hand);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
+static void get_worst_hand(struct hand *worst_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
@@ -110,7 +111,10 @@ int main(void){
         flop |= get_card(&deck);
         flop |= get_card(&deck);
 
-        curr_hand = determine_hand(hand|flop);
+        struct hand worst_hand = { .category = STRAIGHT_FLUSH, .rank = 9 };
+        get_worst_hand(&worst_hand, 52, 2, 0, hand|flop, deck);
+        curr_hand = worst_hand;
+
         combine(52, 4, 0, flop, curr_hand, deck);
 
         losing_prob = (double)(lose+split)/FLOP_COMB;
@@ -124,7 +128,11 @@ int main(void){
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
 
-        curr_hand = determine_hand(hand|flop|turn);
+        worst_hand.category = STRAIGHT_FLUSH;
+        worst_hand.rank = 9;
+        get_worst_hand(&worst_hand, 52, 1, 0, hand|flop|turn, deck);
+        curr_hand = worst_hand;
+
         combine(52, 3, 0, flop|turn, curr_hand, deck);
 
         losing_prob = (double)(lose+split)/TURN_COMB;
@@ -418,6 +426,33 @@ static unsigned long long get_card(unsigned long long *deck){
 
         *deck &= ~card;
         return card;
+}
+
+static void get_worst_hand(struct hand *worst_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
+        numCards--;
+
+        unsigned long long currCard = 1ULL << numCards;
+        totCards -= numCards;
+
+        for(unsigned i = 0; i < totCards; i++){
+                if(numCards){
+                        get_worst_hand(worst_hand, numCards+i, numCards, currCard|hand, community, deck);
+                }else{
+                        unsigned long long currHand = currCard | hand;
+                        if((currHand & deck) == currHand){
+                                struct hand test_hand = determine_hand(currHand|community);
+                                if(test_hand.category < worst_hand->category){
+                                        *worst_hand = test_hand;
+                                }else if(test_hand.category == worst_hand->category){
+                                        if(test_hand.rank < worst_hand->rank){
+                                                *worst_hand = test_hand;
+                                        }
+                                }
+                        }
+                }
+
+                currCard <<= 1;
+        }
 }
 
 static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft){
