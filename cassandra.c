@@ -25,10 +25,10 @@ struct hand{
         unsigned rank;
 };
 
-static unsigned betting_round(unsigned numPlayers);
+static unsigned betting_round(unsigned *bankroll, unsigned *pot);
 static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
-static unsigned evaluate_opponents(unsigned *pot);
+static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft);
@@ -47,8 +47,7 @@ static unsigned long lose = 0;
 static unsigned long split = 0;
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
-        unsigned pot = 0;
-
+        
         unsigned bankroll;
         do{
                 char buffer[8];
@@ -59,6 +58,24 @@ int main(void){
                 }
 
                 int retval = sscanf(buffer, "%u", &bankroll);
+                if(retval < 1){
+                        fprintf(stderr, "ERROR: Unable to parse input.\n");
+                        continue;
+                }
+
+                break;
+        }while(1);
+
+        unsigned pot;
+        do{
+                char buffer[8];
+                printf("Pot: ");
+                if(!fgets(buffer, sizeof(buffer), stdin)){
+                        fprintf(stderr, "ERROR: Problem reading input.\n");
+                        continue;
+                }
+
+                int retval = sscanf(buffer, "%u", &pot);
                 if(retval < 1){
                         fprintf(stderr, "ERROR: Unable to parse input.\n");
                         continue;
@@ -85,7 +102,7 @@ int main(void){
         lose = 0;
         split = 0;
 
-        unsigned numOpponents = evaluate_opponents(&pot);
+        unsigned numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Flop==\n");
@@ -101,7 +118,7 @@ int main(void){
         lose = 0;
         split = 0;
 
-        numOpponents = evaluate_opponents(&pot);
+        numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Turn==\n");
@@ -115,7 +132,7 @@ int main(void){
         lose = 0;
         split = 0;
 
-        numOpponents = evaluate_opponents(&pot);
+        numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==River==\n");
@@ -129,35 +146,58 @@ int main(void){
         lose = 0;
         split = 0;
 
-        numOpponents = evaluate_opponents(&pot);
+        numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         return 0;
 }
 
-static unsigned betting_round(unsigned numPlayers){
-        unsigned pot = 0;
+static unsigned betting_round(unsigned *bankroll, unsigned *pot){
+        unsigned numOpponents = 0;
+        unsigned bet = 0;
 
-        while(numPlayers){
-                char buffer[8];
-                printf("Player #%d: ", numPlayers);
-                if(!fgets(buffer, sizeof(buffer), stdin)){
-                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                        continue;
-                }
+        do{
+                do{
+                        char buffer[8];
+                        printf("Number of Opponents: ");
+                        if(!fgets(buffer, sizeof(buffer), stdin)){
+                                fprintf(stderr, "ERROR: Problem reading input.\n");
+                                continue;
+                        }
 
-                unsigned bet;
-                int retval = sscanf(buffer, "%u", &bet);
-                if(retval < 1){
-                        fprintf(stderr, "ERROR: Unable to parse input.\n");
-                        continue;
-                }
+                        int retval = sscanf(buffer, "%u", &numOpponents);
+                        if(retval < 1){
+                                fprintf(stderr, "ERROR: Unable to parse input.\n");
+                                continue;
+                        }
 
-                pot += bet;
-                numPlayers--;
-        }
+                        break;
+                }while(1);
 
-        return pot;
+                do{
+                        char buffer[8];
+                        printf("Bet Ammount: ");
+                        if(!fgets(buffer, sizeof(buffer), stdin)){
+                                fprintf(stderr, "ERROR: Problem reading input.\n");
+                                continue;
+                        }
+
+                        int retval = sscanf(buffer, "%u", &bet);
+                        if(retval < 1){
+                                fprintf(stderr, "ERROR: Unable to parse input.\n");
+                                continue;
+                        }
+
+                        break;
+                }while(1);
+
+                *bankroll -= bet;
+                *pot += bet;
+
+                *pot += evaluate_opponents(numOpponents);
+        }while(bet);
+
+        return numOpponents;
 }
 
 static void combine(unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, struct hand best_hand, unsigned long long deck){
@@ -315,52 +355,29 @@ static struct hand determine_hand(unsigned long long hand){
         return best_hand;
 }
 
-static unsigned evaluate_opponents(unsigned *pot){
-        unsigned numOpponents = 0;
+static unsigned evaluate_opponents(unsigned numPlayers){
+        unsigned pot = 0;
 
-        do{
+        while(numPlayers){
                 char buffer[8];
-                printf("Number of Opponents: ");
+                printf("Player #%d: ", numPlayers);
                 if(!fgets(buffer, sizeof(buffer), stdin)){
                         fprintf(stderr, "ERROR: Problem reading input.\n");
                         continue;
                 }
 
-                int retval = sscanf(buffer, "%u", &numOpponents);
+                unsigned bet;
+                int retval = sscanf(buffer, "%u", &bet);
                 if(retval < 1){
                         fprintf(stderr, "ERROR: Unable to parse input.\n");
                         continue;
                 }
 
-                if(numOpponents){
-                        *pot += betting_round(numOpponents);
+                pot += bet;
+                numPlayers--;
+        }
 
-                        char repeat;
-                        do{
-                                printf("Repeat: ");
-                                if(!fgets(buffer, sizeof(buffer), stdin)){
-                                        fprintf(stderr, "ERROR: Problem reading input.\n");
-                                        continue;
-                                }
-
-                                int retval = sscanf(buffer, " %c", &repeat);
-                                if(retval < 1){
-                                        fprintf(stderr, "ERROR: Unable to parse input.\n");
-                                        continue;
-                                }
-
-                                break;
-                        }while(1);
-
-                        if(repeat == 'y' || repeat == 'Y'){
-                                continue;
-                        }
-                }
-                
-                break;
-        }while(1);
-
-        return numOpponents;
+        return pot;
 }
 
 static unsigned find_extrema(unsigned lump, unsigned num){
