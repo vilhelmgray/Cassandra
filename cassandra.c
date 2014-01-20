@@ -25,13 +25,13 @@ struct hand{
         unsigned rank;
 };
 
-struct loss_counter{
-        unsigned long lose;
+struct win_counter{
         unsigned long split;
+        unsigned long win;
 };
 
 static unsigned betting_round(unsigned *bankroll, unsigned *pot);
-static void combine(struct loss_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
+static void combine(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
@@ -100,11 +100,11 @@ int main(void){
                 curr_hand.rank = find_extrema(curr_hand.rank, 5);
         }
 
-        struct loss_counter counter = {0};
+        struct win_counter counter = {0};
         combine(&counter, curr_hand, 52, 7, 0, 0, deck);
 
-        double losing_prob = (double)(counter.lose+counter.split)/HAND_COMB;
-        printf("Ratio: %lf\n", losing_prob);
+        double win_prob = (double)(counter.win)/HAND_COMB;
+        printf("Ratio: %lf\n", win_prob);
 
         unsigned numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
@@ -118,12 +118,12 @@ int main(void){
         get_worst_hand(&worst_hand, 52, 2, 0, hand|flop, deck);
         curr_hand = worst_hand;
 
-        counter.lose = 0;
+        counter.win = 0;
         counter.split = 0;
         combine(&counter, curr_hand, 52, 4, 0, flop, deck);
 
-        losing_prob = (double)(counter.lose+counter.split)/FLOP_COMB;
-        printf("Ratio: %lf\n", losing_prob);
+        win_prob = (double)(counter.win)/FLOP_COMB;
+        printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
@@ -136,12 +136,12 @@ int main(void){
         get_worst_hand(&worst_hand, 52, 1, 0, hand|flop|turn, deck);
         curr_hand = worst_hand;
 
-        counter.lose = 0;
+        counter.win = 0;
         counter.split = 0;
         combine(&counter, curr_hand, 52, 3, 0, flop|turn, deck);
 
-        losing_prob = (double)(counter.lose+counter.split)/TURN_COMB;
-        printf("Ratio: %lf\n", losing_prob);
+        win_prob = (double)(counter.win)/TURN_COMB;
+        printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
@@ -151,12 +151,12 @@ int main(void){
 
         curr_hand = determine_hand(hand|flop|turn|river);
 
-        counter.lose = 0;
+        counter.win = 0;
         counter.split = 0;
         combine(&counter, curr_hand, 52, 2, 0, flop|turn|river, deck);
 
-        losing_prob = (double)(counter.lose+counter.split)/RIVER_COMB;
-        printf("Ratio: %lf\n", losing_prob);
+        win_prob = (double)(counter.win)/RIVER_COMB;
+        printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
@@ -212,7 +212,7 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot){
         return numOpponents;
 }
 
-static void combine(struct loss_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
+static void combine(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
         numCards--;
 
         unsigned long long currCard = 1ULL << numCards;
@@ -225,11 +225,11 @@ static void combine(struct loss_counter *counter, struct hand best_hand, unsigne
                         unsigned long long currHand = currCard | hand;
                         if((currHand & deck) == currHand){
                                 struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category > best_hand.category){
-                                        counter->lose++;
+                                if(test_hand.category < best_hand.category){
+                                        counter->win++;
                                 }else if(test_hand.category == best_hand.category){
-                                        if(test_hand.rank > best_hand.rank){
-                                                counter->lose++;
+                                        if(test_hand.rank < best_hand.rank){
+                                                counter->win++;
                                         }else if(test_hand.rank == best_hand.rank){
                                                 counter->split++;
                                         }
