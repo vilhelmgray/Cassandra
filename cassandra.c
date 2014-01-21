@@ -205,6 +205,11 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
                                 continue;
                         }
 
+                        if(bet > *bankroll){
+                                fprintf(stderr, "ERROR: Bet size is greater than bankroll.\n");
+                                continue;
+                        }
+
                         break;
                 }while(1);
 
