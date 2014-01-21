@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 static const unsigned long HAND_COMB = 99884400UL;
 static const unsigned long FLOP_COMB = 178365UL;
@@ -46,7 +47,7 @@ static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
-static double kelly(double p, double b);
+static double kelly(double b, double c, double p);
 static unsigned long long parse_card(const char *card_str);
 
 int main(void){
@@ -571,8 +572,19 @@ static unsigned is_two_pair(unsigned pairs){
         return 0;
 }
 
-static double kelly(double p, double b){
-        return (p*(b+1) - 1)/b;
+/* Kelly equation for poker:
+ * where        b = net odds received on the wager
+ *              c = retained pot / current bankroll
+ *              p = probability of winning
+ *
+ * f = ((b + c/f)*f**b - (1 - f**b))/(b + c/f)
+ * which simplifies to:
+ * f = sqrt((c*x**b)/b + ((1 + c - x**b - b*x**b)**2)/(4*b**2)) - (1 + c - x**b - b*x**b)/(2*b)
+ */
+static double kelly(double b, double c, double p){
+        double p_eff = pow(p, b);
+        double temp = 1 + c - p_eff - b*p_eff;
+        return sqrt(c*p_eff/b + temp*temp/(4*b*b)) - temp/(2*b);
 }
 
 static unsigned long long parse_card(const char *card_str){
