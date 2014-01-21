@@ -31,7 +31,7 @@ struct win_counter{
         unsigned long win;
 };
 
-static unsigned betting_round(unsigned *bankroll, unsigned *pot);
+static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob);
 static void combine(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
 static unsigned evaluate_opponents(unsigned numPlayers);
@@ -107,7 +107,7 @@ int main(void){
         double win_prob = (double)(counter.win)/HAND_COMB;
         printf("Ratio: %lf\n", win_prob);
 
-        unsigned numOpponents = betting_round(&bankroll, &pot);
+        unsigned numOpponents = betting_round(&bankroll, &pot, win_prob);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Flop==\n");
@@ -126,7 +126,7 @@ int main(void){
         win_prob = (double)(counter.win)/FLOP_COMB;
         printf("Ratio: %lf\n", win_prob);
 
-        numOpponents = betting_round(&bankroll, &pot);
+        numOpponents = betting_round(&bankroll, &pot, win_prob);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==Turn==\n");
@@ -144,7 +144,7 @@ int main(void){
         win_prob = (double)(counter.win)/TURN_COMB;
         printf("Ratio: %lf\n", win_prob);
 
-        numOpponents = betting_round(&bankroll, &pot);
+        numOpponents = betting_round(&bankroll, &pot, win_prob);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         printf("==River==\n");
@@ -159,13 +159,13 @@ int main(void){
         win_prob = (double)(counter.win)/RIVER_COMB;
         printf("Ratio: %lf\n", win_prob);
 
-        numOpponents = betting_round(&bankroll, &pot);
+        numOpponents = betting_round(&bankroll, &pot, win_prob);
         printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
 
         return 0;
 }
 
-static unsigned betting_round(unsigned *bankroll, unsigned *pot){
+static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob){
         unsigned numOpponents = 0;
         unsigned bet = 0;
 
@@ -186,6 +186,10 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot){
 
                         break;
                 }while(1);
+
+                double c = (double)(*pot)/(*bankroll);
+                double k_bet = floor(*bankroll * kelly(numOpponents, c, win_prob));
+                printf("You should bet: %lf\n", k_bet);
 
                 do{
                         char buffer[8];
