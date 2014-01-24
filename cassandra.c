@@ -33,8 +33,6 @@ static void determine_win_counter(struct win_counter *counter, unsigned long lon
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
-static void get_worst_hand(struct hand *worst_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
-static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_full_house(unsigned triplets, unsigned pairs);
@@ -442,64 +440,6 @@ static unsigned long long get_card(unsigned long long *deck){
 
         *deck &= ~card;
         return card;
-}
-
-static void get_worst_hand(struct hand *worst_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
-        numCards--;
-
-        unsigned long long currCard = 1ULL << numCards;
-        totCards -= numCards;
-
-        for(unsigned i = 0; i < totCards; i++){
-                if(numCards){
-                        get_worst_hand(worst_hand, numCards+i, numCards, currCard|hand, community, deck);
-                }else{
-                        unsigned long long currHand = currCard | hand;
-                        if((currHand & deck) == currHand){
-                                struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category < worst_hand->category){
-                                        *worst_hand = test_hand;
-                                }else if(test_hand.category == worst_hand->category){
-                                        if(test_hand.rank < worst_hand->rank){
-                                                *worst_hand = test_hand;
-                                        }
-                                }
-                        }
-                }
-
-                currCard <<= 1;
-        }
-}
-
-static unsigned get_worst_rank(unsigned long long deck, unsigned long long hand, unsigned cardsLeft){
-        unsigned rank = 0;
-
-        unsigned club = deck & 0x1FFF;
-        unsigned diamond = deck>>13 & 0x1FFF;
-        unsigned heart = deck>>26 & 0x1FFF;
-        unsigned spade = deck>>39 & 0x1FFF;
-        unsigned lump = (club & diamond & heart & spade)>>1;
-
-        unsigned c = hand & 0x1FFF;
-        unsigned d = hand>>13 & 0x1FFF;
-        unsigned h = hand>>26 & 0x1FFF;
-        unsigned s = hand>>39 & 0x1FFF;
-        unsigned handLump = (c | d | h | s)>>1;
-
-        unsigned card = 0x1;
-        do{
-                unsigned isCardFree = lump & card;
-                unsigned curr_hand = handLump | rank | card;
-
-                if(isCardFree && ((curr_hand&0x1F) != 0x1F) && ((curr_hand&0x3E) != 0x3E) && ((curr_hand&0x7C) != 0x7C)){
-                        rank |= card;
-                        cardsLeft--;
-                }
-
-                card <<= 1;
-        }while(cardsLeft);
-
-        return rank;
 }
 
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
