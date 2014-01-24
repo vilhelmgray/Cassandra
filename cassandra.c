@@ -187,6 +187,13 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
                         break;
                 }while(1);
 
+                /* probability of win with multiple opponents:
+                 * Imagine a jar with 3 green beans and 1 black bean.
+                 * You have 2 opponents; if any get a black bean, you lose.
+                 * probability to win against any opponent = (# green)/(# total)
+                 * probability to win against two: (3/4)*(2/3)
+                 * First opponent has 1 bean, so probability for second opponent assumes first has green bean taken out.
+                 */
                 double c = (double)(*pot)/(*bankroll);
                 double k_bet = floor(*bankroll * kelly(numOpponents, c, win_prob));
                 printf("You should bet: %lf\n", k_bet);
