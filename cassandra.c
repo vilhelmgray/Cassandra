@@ -372,7 +372,7 @@ static void determine_win_counter(struct win_counter *counter, unsigned long lon
                         if((currHand & deck) == currHand){
                                 /* TODO: see if this can be converted to a function pointer deference */
                                 struct hand best_hand = determine_hand(player_hand|community|currHand);
-                                showdown(counter, best_hand, 52, 2, 0, community|currHand, deck & currHand);
+                                showdown(counter, best_hand, 52, 2, 0, community|currHand, deck & (~currHand));
                         }
                 }
 
