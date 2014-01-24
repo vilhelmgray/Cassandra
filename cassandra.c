@@ -93,7 +93,7 @@ int main(void){
         struct win_counter counter = {0};
         determine_win_counter(&counter, hand, 52, 5, 0, 0, deck);
 
-        double win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
+        double win_prob = (double)(counter.win)/(counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         unsigned numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -110,7 +110,7 @@ int main(void){
         /* perhaps incorporate flop into hand and get rid of it and 52 card constant */
         determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
-        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
+        win_prob = (double)(counter.win)/(counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -124,7 +124,7 @@ int main(void){
         counter.win = 0;
         determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
 
-        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
+        win_prob = (double)(counter.win)/(counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -138,7 +138,7 @@ int main(void){
         counter.win = 0;
         determine_win_counter(&counter, hand, 52, 0, 0, flop|turn|river, deck);
 
-        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
+        win_prob = (double)(counter.win)/(counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
