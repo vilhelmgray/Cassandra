@@ -176,7 +176,7 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
                  */
                 double c = (double)(*pot)/(*bankroll);
                 double k_bet = floor(*bankroll * kelly(numOpponents, c, win_prob));
-                printf("You should bet: %lf\n", k_bet);
+                printf("You should bet: %.0lf\n", k_bet);
 
                 do{
                         char buffer[8];
