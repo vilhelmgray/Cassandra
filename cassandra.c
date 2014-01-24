@@ -220,11 +220,31 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
                         break;
                 }while(1);
 
+                if(!bet){
+                        char buffer[8];
+                        printf("Check? [Y/n]: ");
+                        if(!fgets(buffer, sizeof(buffer), stdin)){
+                                fprintf(stderr, "ERROR: Problem reading input.\n");
+                                continue;
+                        }
+
+                        char answer;
+                        int retval = sscanf(buffer, "%c", &answer);
+                        if(retval < 1){
+                                fprintf(stderr, "ERROR: Unable to parse input.\n");
+                                continue;
+                        }
+
+                        if(answer == 'N' || answer == 'n'){
+                                break;
+                        }
+                }
+
                 *bankroll -= bet;
                 *pot += bet;
 
                 *pot += evaluate_opponents(numOpponents);
-        }while(bet);
+        }while(1);
 
         return numOpponents;
 }
