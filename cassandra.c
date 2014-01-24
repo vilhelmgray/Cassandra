@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include <math.h>
 
-static const unsigned long HAND_COMB = 99884400UL;
-static const unsigned long FLOP_COMB = 178365UL;
-static const unsigned TURN_COMB = 15180;
-static const unsigned RIVER_COMB = 990;
-
 enum hand_t{
         HIGH_CARD,
         ONE_PAIR,
@@ -27,6 +22,7 @@ struct hand{
 };
 
 struct win_counter{
+        unsigned long lose;
         unsigned long split;
         unsigned long win;
 };
@@ -97,7 +93,7 @@ int main(void){
         struct win_counter counter = {0};
         determine_win_counter(&counter, hand, 52, 5, 0, 0, deck);
 
-        double win_prob = (double)(counter.win)/HAND_COMB;
+        double win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         unsigned numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -108,12 +104,13 @@ int main(void){
         flop |= get_card(&deck);
         flop |= get_card(&deck);
 
-        counter.win = 0;
+        counter.lose = 0;
         counter.split = 0;
+        counter.win = 0;
         /* perhaps incorporate flop into hand and get rid of it and 52 card constant */
         determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
-        win_prob = (double)(counter.win)/FLOP_COMB;
+        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -122,11 +119,12 @@ int main(void){
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
 
-        counter.win = 0;
+        counter.lose = 0;
         counter.split = 0;
+        counter.win = 0;
         determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
 
-        win_prob = (double)(counter.win)/TURN_COMB;
+        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -135,11 +133,12 @@ int main(void){
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
-        counter.win = 0;
+        counter.lose = 0;
         counter.split = 0;
+        counter.win = 0;
         determine_win_counter(&counter, hand, 52, 0, 0, flop|turn|river, deck);
 
-        win_prob = (double)(counter.win)/RIVER_COMB;
+        win_prob = counter.win/((double)counter.win+counter.split+counter.lose);
         printf("Ratio: %lf\n", win_prob);
 
         numOpponents = betting_round(&bankroll, &pot, win_prob);
@@ -651,7 +650,11 @@ static void showdown(struct win_counter *counter, struct hand best_hand, unsigne
                                                 counter->win++;
                                         }else if(test_hand.rank == best_hand.rank){
                                                 counter->split++;
+                                        }else{
+                                                counter->lose++;
                                         }
+                                }else{
+                                        counter->lose++;
                                 }
                         }
                 }
