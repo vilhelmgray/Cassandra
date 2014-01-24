@@ -32,8 +32,8 @@ struct win_counter{
 };
 
 static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob);
-static void combine(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static struct hand determine_hand(unsigned long long hand);
+static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
@@ -49,6 +49,7 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
 static double kelly(double b, double c, double p);
 static unsigned long long parse_card(const char *card_str);
+static void showdown(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
@@ -93,16 +94,8 @@ int main(void){
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
 
-        struct hand curr_hand = determine_hand(hand);
-        curr_hand.rank |= get_worst_rank(deck, hand, 5);
-        if(curr_hand.category == ONE_PAIR){
-                curr_hand.rank = find_extrema(curr_hand.rank, 3);
-        }else{
-                curr_hand.rank = find_extrema(curr_hand.rank, 5);
-        }
-
         struct win_counter counter = {0};
-        combine(&counter, curr_hand, 52, 7, 0, 0, deck);
+        determine_win_counter(&counter, hand, 52, 5, 0, 0, deck);
 
         double win_prob = (double)(counter.win)/HAND_COMB;
         printf("Ratio: %lf\n", win_prob);
@@ -115,13 +108,10 @@ int main(void){
         flop |= get_card(&deck);
         flop |= get_card(&deck);
 
-        struct hand worst_hand = { .category = STRAIGHT_FLUSH, .rank = 9 };
-        get_worst_hand(&worst_hand, 52, 2, 0, hand|flop, deck);
-        curr_hand = worst_hand;
-
         counter.win = 0;
         counter.split = 0;
-        combine(&counter, curr_hand, 52, 4, 0, flop, deck);
+        /* perhaps incorporate flop into hand and get rid of it and 52 card constant */
+        determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
         win_prob = (double)(counter.win)/FLOP_COMB;
         printf("Ratio: %lf\n", win_prob);
@@ -132,14 +122,9 @@ int main(void){
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
 
-        worst_hand.category = STRAIGHT_FLUSH;
-        worst_hand.rank = 9;
-        get_worst_hand(&worst_hand, 52, 1, 0, hand|flop|turn, deck);
-        curr_hand = worst_hand;
-
         counter.win = 0;
         counter.split = 0;
-        combine(&counter, curr_hand, 52, 3, 0, flop|turn, deck);
+        determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
 
         win_prob = (double)(counter.win)/TURN_COMB;
         printf("Ratio: %lf\n", win_prob);
@@ -150,11 +135,9 @@ int main(void){
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
-        curr_hand = determine_hand(hand|flop|turn|river);
-
         counter.win = 0;
         counter.split = 0;
-        combine(&counter, curr_hand, 52, 2, 0, flop|turn|river, deck);
+        determine_win_counter(&counter, hand, 52, 0, 0, flop|turn|river, deck);
 
         win_prob = (double)(counter.win)/RIVER_COMB;
         printf("Ratio: %lf\n", win_prob);
@@ -247,35 +230,6 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
         }while(1);
 
         return numOpponents;
-}
-
-static void combine(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
-        numCards--;
-
-        unsigned long long currCard = 1ULL << numCards;
-        totCards -= numCards;
-
-        for(unsigned i = 0; i < totCards; i++){
-                if(numCards){
-                        combine(counter, best_hand, numCards+i, numCards, currCard|hand, community, deck);
-                }else{
-                        unsigned long long currHand = currCard | hand;
-                        if((currHand & deck) == currHand){
-                                struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category < best_hand.category){
-                                        counter->win++;
-                                }else if(test_hand.category == best_hand.category){
-                                        if(test_hand.rank < best_hand.rank){
-                                                counter->win++;
-                                        }else if(test_hand.rank == best_hand.rank){
-                                                counter->split++;
-                                        }
-                                }
-                        }
-                }
-
-                currCard <<= 1;
-        }
 }
 
 static struct hand determine_hand(unsigned long long hand){
@@ -402,6 +356,28 @@ static struct hand determine_hand(unsigned long long hand){
                                   .rank = rank };
 
         return best_hand;
+}
+
+static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
+        numCards--;
+
+        unsigned long long currCard = 1ULL << numCards;
+        totCards -= numCards;
+
+        for(unsigned i = 0; i < totCards; i++){
+                if(numCards){
+                        determine_win_counter(counter, player_hand, numCards+i, numCards, currCard|hand, community, deck);
+                }else{
+                        unsigned long long currHand = currCard | hand;
+                        if((currHand & deck) == currHand){
+                                /* TODO: see if this can be converted to a function pointer deference */
+                                struct hand best_hand = determine_hand(player_hand|community|currHand);
+                                showdown(counter, best_hand, 52, 2, 0, community|currHand, deck & currHand);
+                        }
+                }
+
+                currCard <<= 1;
+        }
 }
 
 static unsigned evaluate_opponents(unsigned numPlayers){
@@ -653,4 +629,33 @@ static unsigned long long parse_card(const char *card_str){
         }
 
         return card;
+}
+
+static void showdown(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
+        numCards--;
+
+        unsigned long long currCard = 1ULL << numCards;
+        totCards -= numCards;
+
+        for(unsigned i = 0; i < totCards; i++){
+                if(numCards){
+                        showdown(counter, best_hand, numCards+i, numCards, currCard|hand, community, deck);
+                }else{
+                        unsigned long long currHand = currCard | hand;
+                        if((currHand & deck) == currHand){
+                                struct hand test_hand = determine_hand(currHand|community);
+                                if(test_hand.category < best_hand.category){
+                                        counter->win++;
+                                }else if(test_hand.category == best_hand.category){
+                                        if(test_hand.rank < best_hand.rank){
+                                                counter->win++;
+                                        }else if(test_hand.rank == best_hand.rank){
+                                                counter->split++;
+                                        }
+                                }
+                        }
+                }
+
+                currCard <<= 1;
+        }
 }
