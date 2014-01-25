@@ -135,7 +135,8 @@ int main(void){
 
         counter.split = 0;
         counter.win = 0;
-        determine_win_counter(&counter, hand, 52, 0, 0, flop|turn|river, deck);
+        struct hand best_hand = determine_hand(hand|flop|turn|river);
+        showdown(&counter, best_hand, 52, 2, 0, flop|turn|river, deck);
 
         win_prob = (double)(counter.win)/RIVER_COMB;
         printf("Ratio: %lf\n", win_prob);
