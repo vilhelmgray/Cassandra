@@ -108,7 +108,6 @@ int main(void){
 
         counter.split = 0;
         counter.win = 0;
-        /* perhaps incorporate flop into hand and get rid of it and 52 card constant */
         determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
         win_prob = (double)(counter.win)/FLOP_COMB;
