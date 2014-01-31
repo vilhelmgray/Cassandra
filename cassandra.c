@@ -26,7 +26,7 @@ struct win_counter{
         unsigned long win;
 };
 
-static void betting_round(unsigned *bankroll, unsigned *pot, struct win_counter *counter, const unsigned long COMB);
+static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_counter counter, const unsigned long COMB);
 static struct hand determine_hand(unsigned long long hand);
 static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static unsigned evaluate_opponents(unsigned numPlayers);
@@ -91,7 +91,7 @@ int main(void){
         determine_win_counter(&counter, hand, 52, 5, 0, 0, deck);
 
         const unsigned long HAND_COMB = 2097572400UL;
-        betting_round(&bankroll, &pot, &counter, HAND_COMB);
+        betting_round(&bankroll, &pot, counter, HAND_COMB);
         printf("Pot: %u\n", pot);
 
         printf("==Flop==\n");
@@ -104,7 +104,7 @@ int main(void){
         determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
         const unsigned long FLOP_COMB = 1070190UL;
-        betting_round(&bankroll, &pot, &counter, FLOP_COMB);
+        betting_round(&bankroll, &pot, counter, FLOP_COMB);
         printf("Pot: %u\n", pot);
 
         printf("==Turn==\n");
@@ -115,7 +115,7 @@ int main(void){
         determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
 
         const unsigned TURN_COMB = 45540U;
-        betting_round(&bankroll, &pot, &counter, TURN_COMB);
+        betting_round(&bankroll, &pot, counter, TURN_COMB);
         printf("Pot: %u\n", pot);
 
         printf("==River==\n");
@@ -127,13 +127,13 @@ int main(void){
         showdown(&counter, best_hand, 52, 2, 0, flop|turn|river, deck);
 
         const unsigned RIVER_COMB = 990;
-        betting_round(&bankroll, &pot, &counter, RIVER_COMB);
+        betting_round(&bankroll, &pot, counter, RIVER_COMB);
         printf("Pot: %u\n", pot);
 
         return 0;
 }
 
-static void betting_round(unsigned *bankroll, unsigned *pot, struct win_counter *counter, const unsigned long COMB){
+static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_counter counter, const unsigned long COMB){
         do{
                 unsigned numOpponents;
                 do{
@@ -156,7 +156,7 @@ static void betting_round(unsigned *bankroll, unsigned *pot, struct win_counter 
                 double c = (double)(*pot)/(*bankroll);
                 double p = 1;
                 for(unsigned i = 0; i < numOpponents; i++){
-                        p *= (double)(counter->win - i)/(COMB - i);
+                        p *= (double)(counter.win - i)/(COMB - i);
                 }
                 printf("Win probability: %lf\n", p);
                 double k_bet = floor(*bankroll * kelly(numOpponents, c, p));
