@@ -26,7 +26,7 @@ struct win_counter{
         unsigned long win;
 };
 
-static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob);
+static void betting_round(unsigned *bankroll, unsigned *pot, struct win_counter *counter, const unsigned long COMB);
 static struct hand determine_hand(unsigned long long hand);
 static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
 static unsigned evaluate_opponents(unsigned numPlayers);
@@ -43,11 +43,6 @@ static unsigned is_two_pair(unsigned pairs);
 static double kelly(double b, double c, double p);
 static unsigned long long parse_card(const char *card_str);
 static void showdown(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
-
-static const unsigned long HAND_COMB = 2097572400UL;
-static const unsigned long FLOP_COMB = 1070190UL;
-static const unsigned TURN_COMB = 45540U;
-static const unsigned RIVER_COMB = 990;
 
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
@@ -95,11 +90,9 @@ int main(void){
         struct win_counter counter = {0};
         determine_win_counter(&counter, hand, 52, 5, 0, 0, deck);
 
-        double win_prob = (double)(counter.win)/HAND_COMB;
-        printf("Ratio: %lf\n", win_prob);
-
-        unsigned numOpponents = betting_round(&bankroll, &pot, win_prob);
-        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
+        const unsigned long HAND_COMB = 2097572400UL;
+        betting_round(&bankroll, &pot, &counter, HAND_COMB);
+        printf("Pot: %u\n", pot);
 
         printf("==Flop==\n");
         unsigned long long flop = get_card(&deck);
@@ -110,11 +103,9 @@ int main(void){
         counter.win = 0;
         determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
 
-        win_prob = (double)(counter.win)/FLOP_COMB;
-        printf("Ratio: %lf\n", win_prob);
-
-        numOpponents = betting_round(&bankroll, &pot, win_prob);
-        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
+        const unsigned long FLOP_COMB = 1070190UL;
+        betting_round(&bankroll, &pot, &counter, FLOP_COMB);
+        printf("Pot: %u\n", pot);
 
         printf("==Turn==\n");
         unsigned long long turn = get_card(&deck);
@@ -123,11 +114,9 @@ int main(void){
         counter.win = 0;
         determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
 
-        win_prob = (double)(counter.win)/TURN_COMB;
-        printf("Ratio: %lf\n", win_prob);
-
-        numOpponents = betting_round(&bankroll, &pot, win_prob);
-        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
+        const unsigned TURN_COMB = 45540U;
+        betting_round(&bankroll, &pot, &counter, TURN_COMB);
+        printf("Pot: %u\n", pot);
 
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
@@ -137,20 +126,16 @@ int main(void){
         struct hand best_hand = determine_hand(hand|flop|turn|river);
         showdown(&counter, best_hand, 52, 2, 0, flop|turn|river, deck);
 
-        win_prob = (double)(counter.win)/RIVER_COMB;
-        printf("Ratio: %lf\n", win_prob);
-
-        numOpponents = betting_round(&bankroll, &pot, win_prob);
-        printf("NumOpponents: %u\nPot: %u\n", numOpponents, pot);
+        const unsigned RIVER_COMB = 990;
+        betting_round(&bankroll, &pot, &counter, RIVER_COMB);
+        printf("Pot: %u\n", pot);
 
         return 0;
 }
 
-static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob){
-        unsigned numOpponents = 0;
-        unsigned bet = 0;
-
+static void betting_round(unsigned *bankroll, unsigned *pot, struct win_counter *counter, const unsigned long COMB){
         do{
+                unsigned numOpponents;
                 do{
                         char buffer[8];
                         printf("Number of Opponents: ");
@@ -168,17 +153,16 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
                         break;
                 }while(1);
 
-                /* probability of win with multiple opponents:
-                 * Imagine a jar with 3 green beans and 1 black bean.
-                 * You have 2 opponents; if any get a black bean, you lose.
-                 * probability to win against any opponent = (# green)/(# total)
-                 * probability to win against two: (3/4)*(2/3)
-                 * First opponent has 1 bean, so probability for second opponent assumes first has green bean taken out.
-                 */
                 double c = (double)(*pot)/(*bankroll);
-                double k_bet = floor(*bankroll * kelly(numOpponents, c, win_prob));
+                double p = 1;
+                for(unsigned i = 0; i < numOpponents; i++){
+                        p *= (double)(counter->win - i)/(COMB - i);
+                }
+                printf("Win probability: %lf\n", p);
+                double k_bet = floor(*bankroll * kelly(numOpponents, c, p));
                 printf("You should bet: %.0lf\n", k_bet);
 
+                unsigned bet;
                 do{
                         char buffer[8];
                         printf("Bet Ammount: ");
@@ -226,8 +210,6 @@ static unsigned betting_round(unsigned *bankroll, unsigned *pot, double win_prob
 
                 *pot += evaluate_opponents(numOpponents);
         }while(1);
-
-        return numOpponents;
 }
 
 static struct hand determine_hand(unsigned long long hand){
@@ -529,14 +511,13 @@ static unsigned is_two_pair(unsigned pairs){
  *              c = retained pot / current bankroll
  *              p = probability of winning
  *
- * f = ((b + c/f)*f**b - (1 - f**b))/(b + c/f)
+ * f = ((b + c/f)*p - (1 - p))/(b + c/f)
  * which simplifies to:
- * f = sqrt((c*x**b)/b + ((1 + c - x**b - b*x**b)**2)/(4*b**2)) - (1 + c - x**b - b*x**b)/(2*b)
+ * f = (sqrt((1 + c - p - b*p)**2 + 4*b*c*p) - (1 + c - p - b*p))/(2*b)
  */
 static double kelly(double b, double c, double p){
-        double p_eff = pow(p, b);
-        double temp = 1 + c - p_eff - b*p_eff;
-        return sqrt(c*p_eff/b + temp*temp/(4*b*b)) - temp/(2*b);
+        double temp = 1 + c - p - b*p;
+        return (sqrt(temp*temp + 4*b*c*p) - temp)/(2*b);
 }
 
 static unsigned long long parse_card(const char *card_str){
