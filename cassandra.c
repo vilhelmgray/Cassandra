@@ -167,6 +167,10 @@ static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_co
                         break;
                 }while(1);
 
+                if(!numOpponents){
+                        break;
+                }
+
                 double c = (double)(*pot)/(*bankroll);
                 double p = 1;
                 for(unsigned i = 0; i < numOpponents; i++){
