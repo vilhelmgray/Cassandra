@@ -85,15 +85,12 @@ int main(void){
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
 
+        const size_t NUM_PROB = sizeof(begin_prob)/sizeof(*begin_prob);
         size_t h = 0;
-        for(h = 0; h < 1326; h++){
+        for(h = 0; h < NUM_PROB; h++){
                 if(begin_prob[h].hand == hand){
                         break;
                 }
-        }
-        if(h >= 1326){
-                fprintf(stderr, "ERROR: Hand not found in begin_prob array.");
-                return 1;
         }
 
         const unsigned long HAND_COMB = 2097572400UL;
