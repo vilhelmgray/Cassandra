@@ -1,0 +1,11 @@
+Copyright (C) 2014 William Breathitt Gray
+
+Cassandra uses the Kelly criterion to determine the optimum betting
+amount for a player during a betting round.
+
+Cassandra is free software.
+See the file COPYING for copying conditions.
+
+Contact
+-------
+William Breathit Gray <vilhelm.gray@gmail.com>
