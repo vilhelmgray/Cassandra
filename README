@@ -1,11 +1,19 @@
-Copyright (C) 2014 William Breathitt Gray
+                               Cassandra
+
+About
+-----
 
 Cassandra uses the Kelly criterion to determine the optimum betting
 amount for a Texas hold 'em player during betting rounds.
+
+
+Licensing
+---------
 
 Cassandra is free software.
 See the file COPYING for copying conditions.
 
 Contact
 -------
+
 William Breathit Gray <vilhelm.gray@gmail.com>
