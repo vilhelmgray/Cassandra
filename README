@@ -11,7 +11,7 @@ Algorithm
 A 52-card deck is represented in memory as a 52-bit value, where each
 bit represents a unique discrete card. The suits are broken into
 four groups of contiguous bits; each group consisting of 13 bits
-respectfully representing the 13 discrete cards of the suit.
+respectively representing the 13 discrete cards of the suit.
 
 Licensing
 ---------
