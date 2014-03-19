@@ -16,7 +16,9 @@ respectively representing the 13 discrete cards of the suit.
 Licensing
 ---------
 
-Cassandra is free software.
+Cassandra is free software released under version 3 of the GNU General
+Public License.
+
 See the file COPYING for copying conditions.
 
 Contact
