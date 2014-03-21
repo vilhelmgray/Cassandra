@@ -9,14 +9,15 @@ amount for a Texas hold 'em player during betting rounds.
 Execution
 ---------
 
-Cassandra handles only a single poker hand; Cassandra must be restarted
-for consecutive poker hands.
+Cassandra handles only a single play of a poker hand; Cassandra must
+be restarted for consecutive plays.
 
 The first two prompts respectively request the player's current bankroll
 and the effective pot of the current round; unsigned integer values are
-expected. If the player has a blind (big or small) for the current hand,
-both of these values must reflect the state of the game after the first
-round of betting for the current hand.
+expected. Even if the player has a blind (small or big) for the current
+play, both of the bankroll and pot values must reflect the state of the
+game at the player's first turn to act (i.e. after the blinds have been
+posted).
 
 Algorithm
 ---------
