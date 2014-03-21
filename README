@@ -13,11 +13,19 @@ Cassandra handles only a single play of a poker hand; Cassandra must
 be restarted for consecutive plays.
 
 The first two prompts respectively request the player's current bankroll
-and the effective pot of the current round; unsigned integer values are
+and the retained pot of the current round; unsigned integer values are
 expected. Even if the player has a blind (small or big) for the current
-play, both of the bankroll and pot values must reflect the state of the
-game at the player's first turn to act (i.e. after the blinds have been
-posted).
+play, both the bankroll value and the pot value must reflect the state
+of the game at the player's first turn to act -- i.e. after the blinds
+have been posted.
+
+The retained pot value is determined by multiplying the player's previous
+bet amount by the number of bets placed by the opponents. Since blinds
+are forced bets and result in a delayed first turn to act, the retained
+pot value is only greater than zero when the player has a blind; in all
+other situations, there are no previous bets placed by the player when it
+is his or her first turn to act, so the retained pot amount is 0
+(0 * number_of_opponent_bets = 0).
 
 Algorithm
 ---------
