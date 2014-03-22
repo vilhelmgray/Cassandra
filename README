@@ -27,6 +27,72 @@ other situations, there are no previous bets placed by the player when it
 is his or her first turn to act, so the retained pot amount is 0
 (0 * number_of_opponent_bets = 0).
 
+Example 1:
+
+    There are 4 opponents. The player has a bankroll of 5000 before
+    the play of the hand. The betting order is such: Opponent 1,
+    Opponent 2, Opponent 3, Player, and Opponent 4.
+
+    Sample play:
+    Opponent 1 posts small blind of 15.
+    Opponent 2 posts big blind of 30.
+    Opponent 3 raises 60.
+    Player's turn to act.
+
+    This is the point where Cassandra may be executed. The bankroll
+    prompt input would be 5000 since the player has yet to place a
+    bet. The pot prompt input would be 0 since the player has not
+    made a previous bet.
+
+Example 2:
+
+    There are 4 opponents. The player has a bankroll of 5000 before
+    the play of the hand. The betting order is such: Opponent 1,
+    Player, Opponent 2, Opponent 3, and Opponent 4.
+
+    Sample play:
+    Opponent 1 posts small blind of 15.
+    Player posts big blind of 30.
+    Opponent 2 calls 30.
+    Opponent 3 raises 60.
+    Opponent 4 folds.
+    Opponent 1 calls 45.
+    Player's turn to act.
+
+    This is the point where Cassandra may be executed. The bankroll
+    prompt input would be 4970 since the player posted a blind of 30
+    previously (5000 - 30 = 4970). The pot prompt input would be 90
+    since the player's previous bet amount is 30 and the number of
+    opponent bets since the player's last bet is 3 (30 * 3 = 90);
+    only 3 opponents (Opponent 2, Opponent 3, and Opponent 1) placed
+    bets since the player's previous bet (the big blind of 30). Note
+    that Opponent 3's raise has no affect on the pot prompt input
+    value -- it has the same effect as a call; in contrast,
+    Opponent 4's fold did affect the pot prompt input value by being
+    one less opponent bet to consider.
+
+Example 3:
+
+    There are 4 opponents. The player has a bankroll of 5000 before
+    the play of the hand. The betting order is such: Player,
+    Opponent 1, Opponent 2, Opponent 3, and Opponent 4.
+
+    Sample play:
+    Player posts small blind of 15.
+    Opponent 1 posts big blind of 30.
+    Opponent 2 calls 30.
+    Opponent 3 folds.
+    Opponent 4 folds.
+    Player's turn to act.
+
+    This is the point where Cassandra may be executed. The bankroll
+    prompt input would be 4985 since the player posted a blind of 15
+    previously (5000 - 15 = 4985). The pot prompt input would be 30
+    since the player's previous bet amount is 15 and the number of
+    opponent bets since the player's last bet is 2 (15 * 2 = 30);
+    only 2 opponents (Opponent 1 and Opponent 2) placed bets since
+    the player's previous bet (the small blind of 15).
+
 Algorithm
 ---------
 
