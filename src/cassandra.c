@@ -100,7 +100,7 @@ int main(void){
                 break;
         }while(1);
 
-        printf("==Beginning Hand==\n");
+        printf("==Hole Cards==\n");
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
 
