@@ -93,6 +93,48 @@ Example 3:
     only 2 opponents (Opponent 1 and Opponent 2) placed bets since
     the player's previous bet (the small blind of 15).
 
+At the start of each betting round, the relevant cards for that round
+are requested. A single card is input at a time in a particular format:
+the card rank followed by the card suit. The card rank is represented by
+an unsigned integer between 1 and 13; where integers 2-10 correspond to
+the respective card ranks -- and integers 1, 11, 12, and 13 correspond
+to the Ace, Jack, Queen, and King card ranks respectively. The card suit
+is represented by one of four characters; where the characters "c," "d,"
+"h," and "s" correspond to the Club, Diamond, Heart, and Spade suits
+respectively.
+
+Example 4:
+    
+    The player is dealt the following hole cards: Queen of Diamond
+    and the Three of Heart.
+
+    ==Hole Cards==
+    Input card: 12d
+    Input card: 3h
+
+    The Queen rank is represented by the integer "12," and the
+    Diamond suit is represented by the character "d;" so the player
+    inputs "12d" to represent the Queen of Diamond. The Three rank
+    is represented by the integer "3," and the Heart suit is
+    represented by the character "h;" so the player inputs "3h" to
+    represent the Three of Heart.
+
+Example 5:
+
+    The player is dealt the following hole cards: Ace of Club and
+    the Ace of Spade.
+
+    ==Hole Cards==
+    Input card: 1c
+    Input card: 1s
+
+    The Ace rank is represented by the integer "1," and the Club
+    suit is represented by the character "c;" so the player inputs
+    "1c" to represent the Ace of Club. The Ace rank is represented
+    by the integer "1," and the Spade suit is represented by the
+    character "s;" so the player inputs "1s" to represent the Ace of
+    Spade.
+
 Algorithm
 ---------
 
