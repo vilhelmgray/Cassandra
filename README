@@ -135,6 +135,81 @@ Example 5:
     character "s;" so the player inputs "1s" to represent the Ace of
     Spade.
 
+At the start of every cycle of a betting round, the number of opponents
+is requested and must be given as an unsigned integer. The probability
+of the player winning the entire play of the current poker hand is
+printed, as well as the suggested player bet amount for the current
+turn to act. The player's actual bet amount is then requested and must
+be given as an unsigned integer. The integer 0 for the bet amount prompt
+is used to represent a check by the player, or the end of the betting
+round.
+
+Cassandra then requests the bet amount of each opponent; all opponent
+bet amounts are expected as unsigned integers. An opponent check or fold
+is represented by a respective bet amount of 0. After all opponent bet
+amounts have been entered, the betting cycle repeats by requesting the
+number of opponents again. At this point, the integer 0 may be entered
+to end the betting round. At the end of the betting round, the current
+pot value is printed. Next betting round, if any, begins after the
+previous ends.
+
+Example 6:
+
+    It is the start of a cycle of the Flop betting round. The
+    current pot is 100. There are 3 opponents. The player begins
+    the cycle with a check.
+    
+    Number of Opponents: 3
+    Win probability: 0.262085
+    You should bet: 233
+    Bet Ammount: 0
+    Check? [Y/n]: y
+    Player #3: 0
+    Player #2: 50
+    Player #1: 50
+    Number of Opponents: 3
+    Win probability: 0.262085
+    You should bet: 302
+    Bet Ammount: 50
+    Player #3: 100
+    Player #2: 0
+    Player #1: 50
+    Number of Opponents: 2
+    Win probability: 0.409539
+    You should bet: 845
+    Bet Ammount: 50
+    Player #2: 0
+    Player #1: 0
+    Number of Opponents: 0
+    Pot: 450
+    ==Turn==
+    Input card:
+
+    The betting round can be summed as such:
+    Player checks.
+    Opponent 3 checks.
+    Opponent 2 raises 50.
+    Opponent 1 calls 50.
+    Player calls 50.
+    Opponent 3 raises 100.
+    Opponent 2 folds.
+    Opponent 1 calls 50.
+    Player calls 50.
+    Flop betting round ends.
+    Turn betting round begins.
+
+    Notice how the player chose to bet less than the suggested
+    betting amount in all three turns to act; a player does not have
+    to bet the suggested betting amount. The number of opponents
+    drops to 2 in the player's third turn to act since Opponent 2
+    folded in the previous cycle. It is important to note that even
+    though the betting round ends when the player calls in the
+    player's third turn to act, 0 must be entered for each remaining
+    opponent, since Cassandra lacks the ability to end the betting
+    round at that point. Also note that the pot is adjusted
+    automatically throughout the round, allowing the current pot
+    value to be printed at the end (100 + 50+50+50+100+50+50 = 450).
+
 Algorithm
 ---------
 
