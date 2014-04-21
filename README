@@ -34,10 +34,10 @@ Example 1:
     Opponent 2, Opponent 3, Player, and Opponent 4.
 
     Sample play:
-    Opponent 1 posts small blind of 15.
-    Opponent 2 posts big blind of 30.
-    Opponent 3 raises 60.
-    Player's turn to act.
+        Opponent 1 posts small blind of 15.
+        Opponent 2 posts big blind of 30.
+        Opponent 3 raises 60.
+        Player's turn to act.
 
     This is the point where Cassandra may be executed. The bankroll
     prompt input would be 5000 since the player has yet to place a
@@ -51,13 +51,13 @@ Example 2:
     Player, Opponent 2, Opponent 3, and Opponent 4.
 
     Sample play:
-    Opponent 1 posts small blind of 15.
-    Player posts big blind of 30.
-    Opponent 2 calls 30.
-    Opponent 3 raises 60.
-    Opponent 4 folds.
-    Opponent 1 calls 45.
-    Player's turn to act.
+        Opponent 1 posts small blind of 15.
+        Player posts big blind of 30.
+        Opponent 2 calls 30.
+        Opponent 3 raises 60.
+        Opponent 4 folds.
+        Opponent 1 calls 45.
+        Player's turn to act.
 
     This is the point where Cassandra may be executed. The bankroll
     prompt input would be 4970 since the player posted a blind of 30
@@ -78,12 +78,12 @@ Example 3:
     Opponent 1, Opponent 2, Opponent 3, and Opponent 4.
 
     Sample play:
-    Player posts small blind of 15.
-    Opponent 1 posts big blind of 30.
-    Opponent 2 calls 30.
-    Opponent 3 folds.
-    Opponent 4 folds.
-    Player's turn to act.
+        Player posts small blind of 15.
+        Opponent 1 posts big blind of 30.
+        Opponent 2 calls 30.
+        Opponent 3 folds.
+        Opponent 4 folds.
+        Player's turn to act.
 
     This is the point where Cassandra may be executed. The bankroll
     prompt input would be 4985 since the player posted a blind of 15
@@ -108,9 +108,10 @@ Example 4:
     The player is dealt the following hole cards: Queen of Diamond
     and the Three of Heart.
 
-    ==Hole Cards==
-    Input card: 12d
-    Input card: 3h
+    Cassandra excerpt:
+        ==Hole Cards==
+        Input card: 12d
+        Input card: 3h
 
     The Queen rank is represented by the integer "12," and the
     Diamond suit is represented by the character "d;" so the player
@@ -124,9 +125,10 @@ Example 5:
     The player is dealt the following hole cards: Ace of Club and
     the Ace of Spade.
 
-    ==Hole Cards==
-    Input card: 1c
-    Input card: 1s
+    Cassandra excerpt:
+        ==Hole Cards==
+        Input card: 1c
+        Input card: 1s
 
     The Ace rank is represented by the integer "1," and the Club
     suit is represented by the character "c;" so the player inputs
@@ -159,44 +161,45 @@ Example 6:
     current pot is 100. There are 3 opponents. The player begins
     the cycle with a check.
     
-    Number of Opponents: 3
-    Win probability: 0.262085
-    You should bet: 233
-    Bet Ammount: 0
-    Check? [Y/n]: y
-    Player #3: 0
-    Player #2: 50
-    Player #1: 50
-    Number of Opponents: 3
-    Win probability: 0.262085
-    You should bet: 302
-    Bet Ammount: 50
-    Player #3: 100
-    Player #2: 0
-    Player #1: 50
-    Number of Opponents: 2
-    Win probability: 0.409539
-    You should bet: 845
-    Bet Ammount: 50
-    Player #2: 0
-    Player #1: 0
-    Number of Opponents: 0
-    Pot: 450
-    ==Turn==
-    Input card:
+    Cassandra excerpt:
+        Number of Opponents: 3
+        Win probability: 0.262085
+        You should bet: 233
+        Bet Ammount: 0
+        Check? [Y/n]: y
+        Player #3: 0
+        Player #2: 50
+        Player #1: 50
+        Number of Opponents: 3
+        Win probability: 0.262085
+        You should bet: 302
+        Bet Ammount: 50
+        Player #3: 100
+        Player #2: 0
+        Player #1: 50
+        Number of Opponents: 2
+        Win probability: 0.409539
+        You should bet: 845
+        Bet Ammount: 50
+        Player #2: 0
+        Player #1: 0
+        Number of Opponents: 0
+        Pot: 450
+        ==Turn==
+        Input card:
 
     The betting round can be summed as such:
-    Player checks.
-    Opponent 3 checks.
-    Opponent 2 raises 50.
-    Opponent 1 calls 50.
-    Player calls 50.
-    Opponent 3 raises 100.
-    Opponent 2 folds.
-    Opponent 1 calls 50.
-    Player calls 50.
-    Flop betting round ends.
-    Turn betting round begins.
+        Player checks.
+        Opponent 3 checks.
+        Opponent 2 raises 50.
+        Opponent 1 calls 50.
+        Player calls 50.
+        Opponent 3 raises 100.
+        Opponent 2 folds.
+        Opponent 1 calls 50.
+        Player calls 50.
+        Flop betting round ends.
+        Turn betting round begins.
 
     Notice how the player chose to bet less than the suggested
     betting amount in all three turns to act; a player does not have
