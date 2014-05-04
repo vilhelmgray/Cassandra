@@ -217,9 +217,49 @@ Algorithm
 ---------
 
 A 52-card deck is represented in memory as a 52-bit value, where each
-bit represents a unique discrete card. The suits are broken into
-four groups of contiguous bits; each group consisting of 13 bits
+bit represents a unique discrete card. The card suits are broken into
+four groups of contiguous bits, where each group consists of 13 bits
 respectively representing the 13 discrete cards of the suit.
+
+The suits in order from least significant bit to most significant bit
+are Club (bit 0 to bit 12), Diamond (bit 13 to bit 25), Heart (bit 26
+to bit 38), and Spade (bit 39 to bit 51). Similarly, the card ranks are
+ordered from least significant bit to most significant bit: Ace is
+represented by the least significant bit, Two is represented by the next
+bit, and the rest of the ranks onward by their respective bits, all the
+way to King being represented by the most significant bit (12 bits from
+the respective bit for the Ace rank); each card suit consists of its own
+13 bits representing the respective 13 card ranks of that card suit.
+
+Example 7:
+
+    The Seven of Diamond is represented by bit 19.
+
+    0000000000000 0000000000000 0000001000000 0000000000000
+
+    Assuming the least significant bit is on the right, the Diamond
+    suit is the second group of 13 bits from the right. The Seven
+    rank is the seventh bit of its group, which in this case is bit
+    19. In memory, this value would be 0x80000 (524288).
+
+Since each bit represents a unique discrete card in a 52-card deck, any
+legal hand may be represented by setting the respective bits for the
+cards in the hand.
+
+Example 8:
+
+    The Jack of Club and Two of Heart are given as hole cards.
+
+    0000000000000 0000000000010 0000000000000 0010000000000
+
+    Assuming the least significant bit is on the right, the Club
+    suit is the first group of 13 bits from the right, and the Heart
+    suit is the third group of 13 bits from the right. The Two rank
+    is the second bit of its group, and the Jack rank is the
+    eleventh bit of its group. The Jack of Club is represented by
+    bit 10, and the Two of Heart is represented by bit 27. Setting
+    these two bits in memory results in the value 0x8000400
+    (134218752).
 
 Licensing
 ---------
