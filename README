@@ -269,7 +269,8 @@ criteria; the highest hand rank, whose bitwise criteria the binary
 representative of the hand statisfies, is determined to be the hand's
 rank. Most of the bitwise criteria are simple bitmask operations; this
 method bypasses the usual latencies associated with traditional card
-abstraction algorithms.
+abstraction algorithms (e.g. typical object-oriented approaches
+involving card classes).
 
 Licensing
 ---------
