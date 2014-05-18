@@ -272,6 +272,16 @@ method bypasses the usual latencies associated with traditional card
 abstraction algorithms (e.g. typical object-oriented approaches
 involving card classes).
 
+There are 1326 (52 choose 2) possible combinations of hole cards which a
+player may be dealt at the start of a play; 2 cards out of the 52 card
+deck are chosen. This leaves 50 cards from which 5 are dealt as
+community cards; there are 2118760 (50 choose 5) combinations of
+community cards which are possible after the player's hole cards are
+known. Finally, if the player's hole cards and the community cards are
+known, there remains 990 (45 choose 2) combinations of possible hole
+cards an opponent may have been dealt from the remaining 45 cards of
+the deck.
+
 Licensing
 ---------
 
