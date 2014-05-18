@@ -282,6 +282,36 @@ known, there remains 990 (45 choose 2) combinations of possible hole
 cards an opponent may have been dealt from the remaining 45 cards of
 the deck.
 
+As the betting rounds progress, the number of unknown community cards
+decreases, until all community cards are known by the last betting
+round. As such, the possible combinations of community cards converges
+to a single combination; whereas from 5 unknown community cards there
+were 2118760 (50 choose 5) combinations prior to the flop betting round,
+from 2 unknown community cards there are 1081 (47 choose 2) combinations
+at the flop betting round, from 1 unknown community card there are 46
+(46 choose 1) combinations at the turn betting round, there remains only
+a single combination at the river betting round where all community
+cards are known.
+
+The number of possible one-on-one showdowns at any betting round, for
+any given combination for a player's hole cards can be determined as
+such:
+
+    Pre-Flop:   (50 choose 5) * (45 choose 2)   = 2097572400
+    Flop:       (47 choose 2) * (45 choose 2)   = 1070190
+    Turn:       (46 choose 1) * (45 choose 2)   = 45540
+    River:      (45 choose 2)                   = 990
+
+Note how the number of possible combinations of community cards at any
+given betting round is multiplied by the number of combinations of
+possible hole cards an opponent may have been dealt. This is because
+for any combination of community cards, the number of possible
+one-on-one showdown combinations is wholly dependent on which hole cards
+the opponent could possibly have been dealt (i.e. the number of
+combinations of possible hole cards an opponent may have been dealt);
+this becomes rather apparent in the last betting round where all the
+community cards are known.
+
 Licensing
 ---------
 
