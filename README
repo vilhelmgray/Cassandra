@@ -312,6 +312,15 @@ combinations of possible hole cards an opponent may have been dealt);
 this becomes rather apparent in the last betting round where all the
 community cards are known.
 
+Cassandra simulates all possible one-on-one showdowns, between an
+opponent and the player, for the respective betting round. It
+accumulates the number of possible winning, losing, and split showdowns,
+thus allowing it calculate the probability of the player's hold cards
+winning the play of the hand. In the first betting round however,
+Cassandra does not perform the usual showdown simulations, but rather
+uses a precompiled lookup table containing the simulation results of all
+possible hole cards in order to provide a faster response time.
+
 Licensing
 ---------
 
