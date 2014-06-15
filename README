@@ -384,7 +384,7 @@ optimal bet amount, where "sqrt" is the square root function and "**" is
 the exponential operator:
 
     f = ((n + c/f)*p - (1 - p))/(n + c/f)
-    f = (sqrt((1+c-p-n*p)**2 + 4*n*c*p) - (1+c-p-n*p))/(2*b)
+    f = (sqrt((1+c-p-n*p)**2 + 4*n*c*p) - (1+c-p-n*p))/(2*n)
 
 Licensing
 ---------
