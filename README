@@ -336,6 +336,56 @@ showdowns for the respective betting round:
 
     win_probability = PI((num_win - i)/(COMB - i))
 
+The Kelly criterion is used to determine the suggested bet amount for
+the player. Traditionally, the Kelly criterion for a single outcome is
+represented by the following formula, where "f" is the fraction of the
+current bankroll to wager, "b" is the net odds received on the wager,
+and "p" is the probability of winning:
+
+    f = (bp - (1 - p))/b
+
+In Texas hold 'em, the net odds received on the wager is dependent on
+the state of the pot during the showdown. In particular, when not
+considering split pots, the payout to the winner of a play of the hand
+will be equal to sum of the amount retained in the pot from all
+participants during the previous betting cycles, and the amount the
+player bet in the current betting cycle multiplied by the number of
+opponents remaining (since all opponents must match each others bets in
+order to stay in play for the showdown). In this case, the net gain can
+be expressed by the following equation:
+
+    net_gain = bet_amount * num_opponents + retained_pot_amount
+
+The Kelly criterion formula returns the optimal bet amount as a
+fraction of the player's current bankroll. As such, net gain must first
+be normalized to the player's current bankroll:
+
+    net_gain/bankroll = (bet_amount/bankroll) * num_opponents
+                        + retained_pot_amount/bankroll
+
+The Kelly criterion formula also expects the net odds received on the
+wager, which means that the net gain needs to be expressed in units of
+the wager. Dividing the net gain equation by the normalized optimal bet
+amount gives us the net odds received on the wager, where "f" is the
+normalized wager (bet amount), "n" is the number of opponents, "c" is
+the normalized retained pot amount, and "b" is the net odds received on
+the wager:
+
+    f = bet_amount/bankroll
+    n = num_opponents
+    c = retained_pot_amount/bankroll
+
+    b = net_odds = (net_gain/bankroll)/f = net_gain/bet_amount
+    b = n + c/f
+
+Plugging "b" into the original Kelly criterion formula and solving for
+the "f" variable gives us the version used in Cassandra to determine the
+optimal bet amount, where "sqrt" is the square root function and "**" is
+the exponential operator:
+
+    f = ((n + c/f)*p - (1 - p))/(n + c/f)
+    f = (sqrt((1+c-p-n*p)**2 + 4*n*c*p) - (1+c-p-n*p))/(2*b)
+
 Licensing
 ---------
 
