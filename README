@@ -330,8 +330,9 @@ is a geometric distribution (i.e. an urn problem without replacement)
 and the probability of winning the play of the hand can be determined by
 the following multiplication equation using Capital Pi notation, where
 "PI" is the multiplication function, "i" is from 0 to the number of
-opponents, "num_win" is the number of possible winning showdowns, and
-"COMB" is the total number of possible showdowns:
+opponents, "num_win" is the number of possible winning showdowns for the
+respective betting round, and "COMB" is the total number of possible
+showdowns for the respective betting round:
 
     win_probability = PI((num_win - i)/(COMB - i))
 
