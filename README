@@ -165,7 +165,7 @@ Example 6:
         Number of Opponents: 3
         Win probability: 0.262085
         You should bet: 233
-        Bet Ammount: 0
+        Bet Amount: 0
         Check? [Y/n]: y
         Player #3: 0
         Player #2: 50
@@ -173,14 +173,14 @@ Example 6:
         Number of Opponents: 3
         Win probability: 0.262085
         You should bet: 302
-        Bet Ammount: 50
+        Bet Amount: 50
         Player #3: 100
         Player #2: 0
         Player #1: 50
         Number of Opponents: 2
         Win probability: 0.409539
         You should bet: 845
-        Bet Ammount: 50
+        Bet Amount: 50
         Player #2: 0
         Player #1: 0
         Number of Opponents: 0
@@ -264,9 +264,9 @@ Example 8:
 The binary representation of a hand allows for efficient determination
 of the hand rank via bitwise operations. A hand is initially assumed to
 be of High Card rank (the lowest hand rank). The hand rank is determined
-by analysing the binary representation of the hand for certain bitwise
+by analyzing the binary representation of the hand for certain bitwise
 criteria; the highest hand rank, whose bitwise criteria the binary
-representative of the hand statisfies, is determined to be the hand's
+representative of the hand satisfies, is determined to be the hand's
 rank. Most of the bitwise criteria are simple bitmask operations; this
 method bypasses the usual latencies associated with traditional card
 abstraction algorithms (e.g. typical object-oriented approaches
