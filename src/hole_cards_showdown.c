@@ -22,19 +22,94 @@
 
 #include "lookup.h"
 
+void print_hand(const unsigned long long HAND);
+
 int main(void){
-	printf("Win probability\tSplit probability\tHand\n\n");
+	printf("Win prob.\tSplit prob.\tHoles cards\n\n");
 
 	const size_t NUM_PROB = sizeof(begin_prob)/sizeof(*begin_prob);
-	size_t h = 0;
-	for(h = 0; h < NUM_PROB; h++){
-		const unsigned long HAND_COMB = 2097572400UL;
+	for(size_t h = 0; h < NUM_PROB; h++){
+		const unsigned long HAND_COMB = 2097572400;
 
 		const double win_p = (double)(begin_prob[h].counter.win)/HAND_COMB;
 		const double split_p = (double)(begin_prob[h].counter.split)/HAND_COMB;
 
-		printf("%lf\t%lf\t0x%013llX\n", win_p, split_p, begin_prob[h].hand);
+		printf("%lf\t%lf\t", win_p, split_p);
+		print_hand(begin_prob[h].hand);
+		printf("\n");
 	}
 
 	return 0;
+}
+
+void print_hand(unsigned long long hand){
+	for(unsigned suit = 0; suit < 4; suit++){
+		for(unsigned rank = 0; rank < 13; rank++){
+			const unsigned RANK_MASK = 1 << rank;
+			if(hand & RANK_MASK){
+				switch(rank){
+					case 0:
+						printf("Ace");
+						break;
+					case 1:
+						printf("Two");
+						break;
+					case 2:
+						printf("Three");
+						break;
+					case 3:
+						printf("Four");
+						break;
+					case 4:
+						printf("Five");
+						break;
+					case 5:
+						printf("Six");
+						break;
+					case 6:
+						printf("Seven");
+						break;
+					case 7:
+						printf("Eight");
+						break;
+					case 8:
+						printf("Nine");
+						break;
+					case 9:
+						printf("Ten");
+						break;
+					case 10:
+						printf("Jack");
+						break;
+					case 11:
+						printf("Queen");
+						break;
+					case 12:
+						printf("King");
+						break;
+				}
+
+				printf(" of ");
+
+				switch(suit){
+					case 0:
+						printf("Clubs");
+						break;
+					case 1:
+						printf("Diamonds");
+						break;
+					case 2:
+						printf("Hearts");
+						break;
+					case 3:
+						printf("Spades");
+						break;
+				}
+
+				printf(", ");
+			}
+		}
+
+		hand >>= 13;
+	}
 }
