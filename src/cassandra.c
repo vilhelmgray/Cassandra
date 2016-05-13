@@ -51,7 +51,7 @@ static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_full_house(unsigned triplets, unsigned pairs);
+static unsigned is_full_house(unsigned *const triplets, unsigned *const pairs);
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
@@ -341,7 +341,7 @@ static struct hand determine_hand(unsigned long long hand){
         }
 
         // check for full-house
-        if(type < FULL_HOUSE && is_full_house(triplets, pairs)){
+        if(type < FULL_HOUSE && is_full_house(&triplets, &pairs)){
                 type = FULL_HOUSE;
         }
 
@@ -475,10 +475,24 @@ static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s){
         return 0;
 }
 
-static unsigned is_full_house(unsigned triplets, unsigned pairs){
-        if(triplets){
-                for(unsigned i = 0; i < 13; i++){
-                        if(triplets & 1<<i && pairs & ~(1U<<i)){
+static unsigned is_full_house(unsigned *const triplets, unsigned *const pairs){
+        if(*triplets){
+                for(int i = 12; i >= 0; i--){
+                        const unsigned TRIPLET = 1 << i;
+                        if(*triplets & TRIPLET){
+                                const unsigned OTHER_PAIRS = *pairs & ~(TRIPLET);
+                                if(!OTHER_PAIRS){
+                                        return 0;
+                                }
+
+                                *triplets = TRIPLET;
+
+                                unsigned j = i;
+                                while(!(OTHER_PAIRS >> j)){
+                                        j--;
+                                }
+                                *pairs = 1 << j;
+
                                 return 1;
                         }
                 }
@@ -593,10 +607,59 @@ static void showdown(struct win_counter *counter, struct hand best_hand, unsigne
                                 if(test_hand.category < best_hand.category){
                                         counter->win++;
                                 }else if(test_hand.category == best_hand.category){
-                                        if(test_hand.rank < best_hand.rank){
-                                                counter->win++;
-                                        }else if(test_hand.rank == best_hand.rank){
-                                                counter->split++;
+                                        switch(test_hand.category){
+                                                case ONE_PAIR:
+                                                case TWO_PAIR:
+                                                        if(test_hand.pairs < best_hand.pairs){
+                                                                counter->win++;
+                                                        }else if(test_hand.pairs == best_hand.pairs){
+                                                                if(test_hand.rank < best_hand.rank){
+                                                                        counter->win++;
+                                                                }else if(test_hand.rank == best_hand.rank){
+                                                                        counter->split++;
+                                                                }
+                                                        }
+                                                        break;
+                                                case THREE_OF_A_KIND:
+                                                        if(test_hand.triplets < best_hand.triplets){
+                                                                counter->win++;
+                                                        }else if(test_hand.triplets == best_hand.triplets){
+                                                                if(test_hand.rank < best_hand.rank){
+                                                                        counter->win++;
+                                                                }else if(test_hand.rank == best_hand.rank){
+                                                                        counter->split++;
+                                                                }
+                                                        }
+                                                        break;
+                                                case FULL_HOUSE:
+                                                        if(test_hand.triplets < best_hand.triplets){
+                                                                counter->win++;
+                                                        }else if(test_hand.triplets == best_hand.triplets){
+                                                                if(test_hand.pairs < best_hand.pairs){
+                                                                        counter->win++;
+                                                                }else if(test_hand.pairs == best_hand.pairs){
+                                                                        counter->split++;
+                                                                }
+                                                        }
+                                                        break;
+                                                case FOUR_OF_A_KIND:
+                                                        if(test_hand.quadruplet < best_hand.quadruplet){
+                                                                counter->win++;
+                                                        }else if(test_hand.quadruplet == best_hand.quadruplet){
+                                                                if(test_hand.rank < best_hand.rank){
+                                                                        counter->win++;
+                                                                }else if(test_hand.rank == best_hand.rank){
+                                                                        counter->split++;
+                                                                }
+                                                        }
+                                                        break;
+                                                default:
+                                                        if(test_hand.rank < best_hand.rank){
+                                                                counter->win++;
+                                                        }else if(test_hand.rank == best_hand.rank){
+                                                                counter->split++;
+                                                        }
+                                                        break;
                                         }
                                 }
                         }
