@@ -45,7 +45,7 @@ struct hand{
 
 static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_counter counter, const unsigned long COMB);
 static struct hand determine_hand(unsigned long long hand);
-static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
+static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
@@ -122,7 +122,7 @@ int main(void){
         flop |= get_card(&deck);
 
         struct win_counter counter = {0};
-        determine_win_counter(&counter, hand, 52, 2, 0, flop, deck);
+        determine_win_counter(&counter, deck, flop, hand, 2);
 
         const unsigned long FLOP_COMB = 1070190UL;
         betting_round(&bankroll, &pot, counter, FLOP_COMB);
@@ -133,7 +133,7 @@ int main(void){
 
         counter.split = 0;
         counter.win = 0;
-        determine_win_counter(&counter, hand, 52, 1, 0, flop|turn, deck);
+        determine_win_counter(&counter, deck, flop|turn, hand, 1);
 
         const unsigned TURN_COMB = 45540U;
         betting_round(&bankroll, &pot, counter, TURN_COMB);
@@ -363,26 +363,32 @@ static struct hand determine_hand(unsigned long long hand){
         return best_hand;
 }
 
-static void determine_win_counter(struct win_counter *counter, unsigned long long player_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
-        numCards--;
+static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS){
+        const unsigned TOT_CARDS = 52;
+        const unsigned long long BOUNDARY = 1ULL << TOT_CARDS;
 
-        unsigned long long currCard = 1ULL << numCards;
-        totCards -= numCards;
-
-        for(unsigned i = 0; i < totCards; i++){
-                if(numCards){
-                        determine_win_counter(counter, player_hand, numCards+i, numCards, currCard|hand, community, deck);
-                }else{
-                        unsigned long long currHand = currCard | hand;
-                        if((currHand & deck) == currHand){
-                                /* TODO: see if this can be converted to a function pointer deference */
-                                struct hand best_hand = determine_hand(player_hand|community|currHand);
-                                showdown(counter, best_hand, 52, 2, 0, community|currHand, deck & (~currHand));
-                        }
+        unsigned long long cards = (1ULL << NUM_CARDS) - 1;
+        do{
+                if((cards & DECK) == cards){
+                        struct hand best_hand = determine_hand(HAND|COMMUNITY|cards);
+                        showdown(counter, best_hand, 52, 2, 0, COMMUNITY|cards, DECK & (~cards));
                 }
 
-                currCard <<= 1;
-        }
+                unsigned long long pos_mask = 1;
+                while(!(cards & pos_mask)){
+                        pos_mask <<= 1;
+                }
+
+                unsigned card_num = 0;
+                while(cards & pos_mask){
+                        card_num++;
+                        pos_mask <<= 1;
+                }
+
+                cards |= pos_mask;
+                cards &= ~(pos_mask - 1);
+                cards |= (1ULL<<card_num-1) - 1;
+        }while(cards < BOUNDARY);
 }
 
 static unsigned evaluate_opponents(unsigned numPlayers){
