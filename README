@@ -6,6 +6,15 @@ About
 Cassandra uses the Kelly criterion to determine the optimum betting
 amount for a Texas hold 'em player during betting rounds.
 
+Update (May 13, 2016):
+I discovered errors in how an earlier version of Cassandra ranked
+various hands. Specific probabilities listed in this README, as well as
+the "Results and Musings" section of this README, were written down
+based on the output of this incorrect earlier version of Cassandra.
+Updates to Cassandra have been made to correct these issues, but I shall
+keep the README text the same for now; the algorithms detailed within
+this README were not affected by the software errors.
+
 Execution
 ---------
 
