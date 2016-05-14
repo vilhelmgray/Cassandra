@@ -56,7 +56,7 @@ static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
 static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_two_pair(unsigned pairs);
+static unsigned is_two_pair(unsigned *const pairs);
 static double kelly(double b, double c, double p);
 static unsigned long long parse_card(const char *card_str);
 static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK);
@@ -346,7 +346,7 @@ static struct hand determine_hand(unsigned long long hand){
         }
 
         // check for two pair
-        if(type < TWO_PAIR && is_two_pair(pairs)){
+        if(type < TWO_PAIR && is_two_pair(&pairs)){
                 type = TWO_PAIR;
 
                 unsigned normalize = lump & (~pairs);
@@ -539,16 +539,31 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s){
         return 0;
 }
 
-static unsigned is_two_pair(unsigned pairs){
-        if(pairs){
-                for(unsigned i = 0; i < 12; i++){
-                        if((pairs>>i) & 0x1 && pairs>>(i+1)){
-                                return 1;
-                        }
-                }
+static unsigned is_two_pair(unsigned *const pairs){
+        if(!*pairs){
+                return 0;
         }
 
-        return 0;
+        unsigned i = 1;
+        while(*pairs >> i){
+                i++;
+        }
+        const unsigned HIGH_PAIR = 1 << (i-1);
+
+        const unsigned OTHER_PAIRS = *pairs & ~(HIGH_PAIR);
+        if(!OTHER_PAIRS){
+                return 0;
+        }
+
+        *pairs = HIGH_PAIR;
+
+        i = 1;
+        while(OTHER_PAIRS >> i){
+                i++;
+        }
+        *pairs |= 1 << (i-1);
+
+        return 1;
 }
 
 /* Kelly equation for poker:
