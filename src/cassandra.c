@@ -59,7 +59,7 @@ static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_two_pair(unsigned pairs);
 static double kelly(double b, double c, double p);
 static unsigned long long parse_card(const char *card_str);
-static void showdown(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck);
+static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK);
 
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
@@ -145,7 +145,7 @@ int main(void){
         counter.split = 0;
         counter.win = 0;
         struct hand best_hand = determine_hand(hand|flop|turn|river);
-        showdown(&counter, best_hand, 52, 2, 0, flop|turn|river, deck);
+        showdown(&counter, best_hand, flop|turn|river, deck);
 
         const unsigned RIVER_COMB = 990;
         betting_round(&bankroll, &pot, counter, RIVER_COMB);
@@ -371,7 +371,7 @@ static void determine_win_counter(struct win_counter *const counter, const unsig
         do{
                 if((cards & DECK) == cards){
                         struct hand best_hand = determine_hand(HAND|COMMUNITY|cards);
-                        showdown(counter, best_hand, 52, 2, 0, COMMUNITY|cards, DECK & (~cards));
+                        showdown(counter, best_hand, COMMUNITY|cards, DECK & (~cards));
                 }
 
                 unsigned long long pos_mask = 1;
@@ -597,80 +597,87 @@ static unsigned long long parse_card(const char *card_str){
         return card;
 }
 
-static void showdown(struct win_counter *counter, struct hand best_hand, unsigned totCards, unsigned numCards, unsigned long long hand, unsigned long long community, unsigned long long deck){
-        numCards--;
+static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK){
+        const unsigned TOT_CARDS = 52;
+        const unsigned long long BOUNDARY = 1ULL << TOT_CARDS;
 
-        unsigned long long currCard = 1ULL << numCards;
-        totCards -= numCards;
-
-        for(unsigned i = 0; i < totCards; i++){
-                if(numCards){
-                        showdown(counter, best_hand, numCards+i, numCards, currCard|hand, community, deck);
-                }else{
-                        unsigned long long currHand = currCard | hand;
-                        if((currHand & deck) == currHand){
-                                struct hand test_hand = determine_hand(currHand|community);
-                                if(test_hand.category < best_hand.category){
-                                        counter->win++;
-                                }else if(test_hand.category == best_hand.category){
-                                        switch(test_hand.category){
-                                                case ONE_PAIR:
-                                                case TWO_PAIR:
-                                                        if(test_hand.pairs < best_hand.pairs){
-                                                                counter->win++;
-                                                        }else if(test_hand.pairs == best_hand.pairs){
-                                                                if(test_hand.rank < best_hand.rank){
-                                                                        counter->win++;
-                                                                }else if(test_hand.rank == best_hand.rank){
-                                                                        counter->split++;
-                                                                }
-                                                        }
-                                                        break;
-                                                case THREE_OF_A_KIND:
-                                                        if(test_hand.triplets < best_hand.triplets){
-                                                                counter->win++;
-                                                        }else if(test_hand.triplets == best_hand.triplets){
-                                                                if(test_hand.rank < best_hand.rank){
-                                                                        counter->win++;
-                                                                }else if(test_hand.rank == best_hand.rank){
-                                                                        counter->split++;
-                                                                }
-                                                        }
-                                                        break;
-                                                case FULL_HOUSE:
-                                                        if(test_hand.triplets < best_hand.triplets){
-                                                                counter->win++;
-                                                        }else if(test_hand.triplets == best_hand.triplets){
-                                                                if(test_hand.pairs < best_hand.pairs){
-                                                                        counter->win++;
-                                                                }else if(test_hand.pairs == best_hand.pairs){
-                                                                        counter->split++;
-                                                                }
-                                                        }
-                                                        break;
-                                                case FOUR_OF_A_KIND:
-                                                        if(test_hand.quadruplet < best_hand.quadruplet){
-                                                                counter->win++;
-                                                        }else if(test_hand.quadruplet == best_hand.quadruplet){
-                                                                if(test_hand.rank < best_hand.rank){
-                                                                        counter->win++;
-                                                                }else if(test_hand.rank == best_hand.rank){
-                                                                        counter->split++;
-                                                                }
-                                                        }
-                                                        break;
-                                                default:
+        unsigned long long cards = 0x3;
+        do{
+                if((cards & DECK) == cards){
+                        const struct hand test_hand = determine_hand(cards|COMMUNITY);
+                        if(test_hand.category < best_hand.category){
+                                counter->win++;
+                        }else if(test_hand.category == best_hand.category){
+                                switch(test_hand.category){
+                                        case ONE_PAIR:
+                                        case TWO_PAIR:
+                                                if(test_hand.pairs < best_hand.pairs){
+                                                        counter->win++;
+                                                }else if(test_hand.pairs == best_hand.pairs){
                                                         if(test_hand.rank < best_hand.rank){
                                                                 counter->win++;
                                                         }else if(test_hand.rank == best_hand.rank){
                                                                 counter->split++;
                                                         }
-                                                        break;
-                                        }
+                                                }
+                                                break;
+                                        case THREE_OF_A_KIND:
+                                                if(test_hand.triplets < best_hand.triplets){
+                                                        counter->win++;
+                                                }else if(test_hand.triplets == best_hand.triplets){
+                                                        if(test_hand.rank < best_hand.rank){
+                                                                counter->win++;
+                                                        }else if(test_hand.rank == best_hand.rank){
+                                                                counter->split++;
+                                                        }
+                                                }
+                                                break;
+                                        case FULL_HOUSE:
+                                                if(test_hand.triplets < best_hand.triplets){
+                                                        counter->win++;
+                                                }else if(test_hand.triplets == best_hand.triplets){
+                                                        if(test_hand.pairs < best_hand.pairs){
+                                                                counter->win++;
+                                                        }else if(test_hand.pairs == best_hand.pairs){
+                                                                counter->split++;
+                                                        }
+                                                }
+                                                break;
+                                        case FOUR_OF_A_KIND:
+                                                if(test_hand.quadruplet < best_hand.quadruplet){
+                                                        counter->win++;
+                                                }else if(test_hand.quadruplet == best_hand.quadruplet){
+                                                        if(test_hand.rank < best_hand.rank){
+                                                                counter->win++;
+                                                        }else if(test_hand.rank == best_hand.rank){
+                                                                counter->split++;
+                                                        }
+                                                }
+                                                break;
+                                        default:
+                                                if(test_hand.rank < best_hand.rank){
+                                                        counter->win++;
+                                                }else if(test_hand.rank == best_hand.rank){
+                                                        counter->split++;
+                                                }
+                                                break;
                                 }
                         }
                 }
 
-                currCard <<= 1;
-        }
+                unsigned long long pos_mask = 1;
+                while(!(cards & pos_mask)){
+                        pos_mask <<= 1;
+                }
+
+                unsigned card_num = 0;
+                while(cards & pos_mask){
+                        card_num++;
+                        pos_mask <<= 1;
+                }
+
+                cards |= pos_mask;
+                cards &= ~(pos_mask - 1);
+                cards |= (1ULL<<card_num-1) - 1;
+        }while(cards < BOUNDARY);
 }
