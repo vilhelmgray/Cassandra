@@ -38,7 +38,7 @@ enum hand_t{
 struct hand{
         enum hand_t category;
         unsigned quadruplet;
-        unsigned triplets;
+        unsigned triplet;
         unsigned pairs;
         unsigned rank;
 };
@@ -51,7 +51,7 @@ static unsigned find_extrema(unsigned lump, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
 static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_full_house(unsigned *const triplets, unsigned *const pairs);
+static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs);
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
 static unsigned is_straight(unsigned lump, unsigned smask);
 static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
@@ -250,7 +250,7 @@ static struct hand determine_hand(unsigned long long hand){
         rank = find_extrema(rank, 5);
 
         unsigned pairs = 0;
-        unsigned triplets = 0;
+        unsigned triplet = 0;
         unsigned quadruplet = 0;
 
         unsigned chits = 0;
@@ -292,11 +292,11 @@ static struct hand determine_hand(unsigned long long hand){
 
                         // check for three-of-a-kind
                         if(is_toak(c, d, h, s)){
-                                triplets |= 1<<i;
+                                triplet = 1<<i;
                                 if(type < THREE_OF_A_KIND){
                                         type = THREE_OF_A_KIND;
 
-                                        unsigned normalize = lump & (~triplets);
+                                        unsigned normalize = lump & (~triplet);
                                         normalize = (normalize>>1) | ((normalize&0x1)<<12);
                                         rank = find_extrema(normalize, 2);
                                 }
@@ -341,7 +341,7 @@ static struct hand determine_hand(unsigned long long hand){
         }
 
         // check for full-house
-        if(type < FULL_HOUSE && is_full_house(&triplets, &pairs)){
+        if(type < FULL_HOUSE && is_full_house(triplet, &pairs)){
                 type = FULL_HOUSE;
         }
 
@@ -356,7 +356,7 @@ static struct hand determine_hand(unsigned long long hand){
 
         struct hand best_hand = { .category = type,
                                   .quadruplet = (quadruplet>>1) | ((quadruplet&0x1)<<12),
-                                  .triplets = (triplets>>1) | ((triplets&0x1)<<12),
+                                  .triplet = (triplet>>1) | ((triplet&0x1)<<12),
                                   .pairs = (pairs>>1) | ((pairs&0x1)<<12),
                                   .rank = rank };
 
@@ -481,30 +481,23 @@ static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s){
         return 0;
 }
 
-static unsigned is_full_house(unsigned *const triplets, unsigned *const pairs){
-        if(*triplets){
-                for(int i = 12; i >= 0; i--){
-                        const unsigned TRIPLET = 1 << i;
-                        if(*triplets & TRIPLET){
-                                const unsigned OTHER_PAIRS = *pairs & ~(TRIPLET);
-                                if(!OTHER_PAIRS){
-                                        return 0;
-                                }
-
-                                *triplets = TRIPLET;
-
-                                unsigned j = i;
-                                while(!(OTHER_PAIRS >> j)){
-                                        j--;
-                                }
-                                *pairs = 1 << j;
-
-                                return 1;
-                        }
-                }
+static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
+        if(!TRIPLET){
+                return 0;
         }
 
-        return 0;
+        const unsigned OTHER_PAIRS = *pairs & ~(TRIPLET);
+        if(!OTHER_PAIRS){
+                return 0;
+        }
+
+        unsigned i = 1;
+        while(OTHER_PAIRS >> i){
+                i++;
+        }
+        *pairs = 1 << (i-1);
+
+        return 1;
 }
 
 static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s){
@@ -637,9 +630,9 @@ static void showdown(struct win_counter *const counter, const struct hand best_h
                                                 }
                                                 break;
                                         case THREE_OF_A_KIND:
-                                                if(test_hand.triplets < best_hand.triplets){
+                                                if(test_hand.triplet < best_hand.triplet){
                                                         counter->win++;
-                                                }else if(test_hand.triplets == best_hand.triplets){
+                                                }else if(test_hand.triplet == best_hand.triplet){
                                                         if(test_hand.rank < best_hand.rank){
                                                                 counter->win++;
                                                         }else if(test_hand.rank == best_hand.rank){
@@ -648,9 +641,9 @@ static void showdown(struct win_counter *const counter, const struct hand best_h
                                                 }
                                                 break;
                                         case FULL_HOUSE:
-                                                if(test_hand.triplets < best_hand.triplets){
+                                                if(test_hand.triplet < best_hand.triplet){
                                                         counter->win++;
-                                                }else if(test_hand.triplets == best_hand.triplets){
+                                                }else if(test_hand.triplet == best_hand.triplet){
                                                         if(test_hand.pairs < best_hand.pairs){
                                                                 counter->win++;
                                                         }else if(test_hand.pairs == best_hand.pairs){
