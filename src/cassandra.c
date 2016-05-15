@@ -59,7 +59,7 @@ static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, co
 static unsigned is_two_pair(unsigned *const pairs);
 static double kelly(const double B, const double C, const double P);
 static unsigned long long parse_card(const char *card_str);
-static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK);
+static void showdown(struct win_counter *const counter, const struct hand *const BEST_HAND, const unsigned long long COMMUNITY, const unsigned long long DECK);
 
 int main(void){
         unsigned long long deck = 0xFFFFFFFFFFFFF;
@@ -146,7 +146,7 @@ int main(void){
         determine_hand(&best_hand, hand|flop|turn|river);
         counter.split = 0;
         counter.win = 0;
-        showdown(&counter, best_hand, flop|turn|river, deck);
+        showdown(&counter, &best_hand, flop|turn|river, deck);
 
         const unsigned RIVER_COMB = 990;
         betting_round(&bankroll, &pot, counter, RIVER_COMB);
@@ -379,7 +379,7 @@ static void determine_win_counter(struct win_counter *const counter, const unsig
                         struct hand best_hand;
                         determine_hand(&best_hand, HAND|COMMUNITY|cards);
 
-                        showdown(counter, best_hand, COMMUNITY|cards, DECK & (~cards));
+                        showdown(counter, &best_hand, COMMUNITY|cards, DECK & (~cards));
                 }
 
                 unsigned long long pos_mask = 1;
@@ -593,7 +593,7 @@ static unsigned long long parse_card(const char *card_str){
         return card;
 }
 
-static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK){
+static void showdown(struct win_counter *const counter, const struct hand *const BEST_HAND, const unsigned long long COMMUNITY, const unsigned long long DECK){
         const unsigned TOT_CARDS = 52;
         const unsigned long long BOUNDARY = 1ULL << TOT_CARDS;
 
@@ -603,59 +603,59 @@ static void showdown(struct win_counter *const counter, const struct hand best_h
                         struct hand test_hand;
                         determine_hand(&test_hand, cards|COMMUNITY);
 
-                        if(test_hand.category < best_hand.category){
+                        if(test_hand.category < BEST_HAND->category){
                                 counter->win++;
-                        }else if(test_hand.category == best_hand.category){
+                        }else if(test_hand.category == BEST_HAND->category){
                                 switch(test_hand.category){
                                         case ONE_PAIR:
                                         case TWO_PAIR:
-                                                if(test_hand.pairs < best_hand.pairs){
+                                                if(test_hand.pairs < BEST_HAND->pairs){
                                                         counter->win++;
-                                                }else if(test_hand.pairs == best_hand.pairs){
-                                                        if(test_hand.rank < best_hand.rank){
+                                                }else if(test_hand.pairs == BEST_HAND->pairs){
+                                                        if(test_hand.rank < BEST_HAND->rank){
                                                                 counter->win++;
-                                                        }else if(test_hand.rank == best_hand.rank){
+                                                        }else if(test_hand.rank == BEST_HAND->rank){
                                                                 counter->split++;
                                                         }
                                                 }
                                                 break;
                                         case THREE_OF_A_KIND:
-                                                if(test_hand.triplet < best_hand.triplet){
+                                                if(test_hand.triplet < BEST_HAND->triplet){
                                                         counter->win++;
-                                                }else if(test_hand.triplet == best_hand.triplet){
-                                                        if(test_hand.rank < best_hand.rank){
+                                                }else if(test_hand.triplet == BEST_HAND->triplet){
+                                                        if(test_hand.rank < BEST_HAND->rank){
                                                                 counter->win++;
-                                                        }else if(test_hand.rank == best_hand.rank){
+                                                        }else if(test_hand.rank == BEST_HAND->rank){
                                                                 counter->split++;
                                                         }
                                                 }
                                                 break;
                                         case FULL_HOUSE:
-                                                if(test_hand.triplet < best_hand.triplet){
+                                                if(test_hand.triplet < BEST_HAND->triplet){
                                                         counter->win++;
-                                                }else if(test_hand.triplet == best_hand.triplet){
-                                                        if(test_hand.pairs < best_hand.pairs){
+                                                }else if(test_hand.triplet == BEST_HAND->triplet){
+                                                        if(test_hand.pairs < BEST_HAND->pairs){
                                                                 counter->win++;
-                                                        }else if(test_hand.pairs == best_hand.pairs){
+                                                        }else if(test_hand.pairs == BEST_HAND->pairs){
                                                                 counter->split++;
                                                         }
                                                 }
                                                 break;
                                         case FOUR_OF_A_KIND:
-                                                if(test_hand.quadruplet < best_hand.quadruplet){
+                                                if(test_hand.quadruplet < BEST_HAND->quadruplet){
                                                         counter->win++;
-                                                }else if(test_hand.quadruplet == best_hand.quadruplet){
-                                                        if(test_hand.rank < best_hand.rank){
+                                                }else if(test_hand.quadruplet == BEST_HAND->quadruplet){
+                                                        if(test_hand.rank < BEST_HAND->rank){
                                                                 counter->win++;
-                                                        }else if(test_hand.rank == best_hand.rank){
+                                                        }else if(test_hand.rank == BEST_HAND->rank){
                                                                 counter->split++;
                                                         }
                                                 }
                                                 break;
                                         default:
-                                                if(test_hand.rank < best_hand.rank){
+                                                if(test_hand.rank < BEST_HAND->rank){
                                                         counter->win++;
-                                                }else if(test_hand.rank == best_hand.rank){
+                                                }else if(test_hand.rank == BEST_HAND->rank){
                                                         counter->split++;
                                                 }
                                                 break;
