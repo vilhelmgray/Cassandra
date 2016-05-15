@@ -395,9 +395,9 @@ static void determine_win_counter(struct win_counter *const counter, const unsig
                         pos_mask <<= 1;
                 }
 
-                cards |= pos_mask;
                 cards &= ~(pos_mask - 1);
-                cards |= (1ULL<<card_num-1) - 1;
+                cards |= pos_mask;
+                cards |= (1ULL << card_num-1) - 1;
         }while(cards < BOUNDARY);
 }
 
@@ -463,9 +463,9 @@ static void generate_lookup(void){
                         pos_mask <<= 1;
                 }
 
-                cards |= pos_mask;
                 cards &= ~(pos_mask - 1);
-                cards |= (1ULL<<card_num-1) - 1;
+                cards |= pos_mask;
+                cards |= (1ULL << card_num-1) - 1;
         }while(cards < BOUNDARY);
 
         printf("};\n");
@@ -707,8 +707,8 @@ static void showdown(struct win_counter *const counter, const struct hand *const
                         pos_mask <<= 1;
                 }
 
-                cards |= pos_mask;
                 cards &= ~(pos_mask - 1);
-                cards |= (1ULL<<card_num-1) - 1;
+                cards |= pos_mask;
+                cards |= (1ULL << card_num-1) - 1;
         }while(cards < BOUNDARY);
 }
