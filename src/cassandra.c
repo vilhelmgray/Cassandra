@@ -48,6 +48,7 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
 static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(const unsigned LUMP, unsigned num);
+static void generate_lookup(void);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS);
 static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
@@ -437,6 +438,37 @@ static unsigned find_extrema(const unsigned LUMP, unsigned num){
         }
 
         return extrema;
+}
+
+static void generate_lookup(void){
+        printf("const struct probability begin_prob[325] = {\n");
+
+        const unsigned TOT_CARDS = 26;
+        const unsigned long long BOUNDARY = 1ULL << TOT_CARDS;
+
+        unsigned long long cards = 0x3;
+        do{
+                struct win_counter counter = {0};
+                determine_win_counter(&counter, 0xFFFFFFFFFFFFF & (~cards), 0, cards, 5);
+                printf("\t{ .hand = 0x%llX, .counter = { .split = %lu, .win = %lu } },\n", cards, counter.split, counter.win);
+
+                unsigned long long pos_mask = 1;
+                while(!(cards & pos_mask)){
+                        pos_mask <<= 1;
+                }
+
+                unsigned card_num = 0;
+                while(cards & pos_mask){
+                        card_num++;
+                        pos_mask <<= 1;
+                }
+
+                cards |= pos_mask;
+                cards &= ~(pos_mask - 1);
+                cards |= (1ULL<<card_num-1) - 1;
+        }while(cards < BOUNDARY);
+
+        printf("};\n");
 }
 
 static unsigned long long get_card(unsigned long long *deck){
