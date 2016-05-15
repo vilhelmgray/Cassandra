@@ -280,14 +280,14 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
         unsigned hhits = 0;
         unsigned shits = 0;
 
-        for(unsigned i = 0; i < 13; i++){
+        for(unsigned i = 0; type < FOUR_OF_A_KIND && i < 13; i++){
                 const unsigned C = CLUB_NORMALIZED & 1<<i;
                 const unsigned D = DIAMOND_NORMALIZED & 1<<i;
                 const unsigned H = HEART_NORMALIZED & 1<<i;
                 const unsigned S = SPADE_NORMALIZED & 1<<i;
 
                 // check for pair
-                if(type <= FULL_HOUSE && is_pair(C, D, H, S)){
+                if(is_pair(C, D, H, S)){
                         pairs |= 1<<i;
                         if(type < ONE_PAIR){
                                 type = ONE_PAIR;
@@ -304,6 +304,7 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
                                 if(is_foak(C, D, H, S)){
                                         quadruplet = 1<<i;
                                         type = FOUR_OF_A_KIND;
+                                        break;
                                 }
                         }
                 }
