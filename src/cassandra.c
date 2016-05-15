@@ -300,7 +300,7 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
                         case 4:
                                 quadruplet = 1<<i;
                                 type = FOUR_OF_A_KIND;
-                                break;
+                                continue;
                         case 3:
                                 triplet = 1<<i;
                                 if(type < THREE_OF_A_KIND){
@@ -314,41 +314,34 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
                                 break;
                 }
 
-                // check for flush
-                if(type < FLUSH){
-                        chits += C_HIT;
-                        dhits += D_HIT;
-                        hhits += H_HIT;
-                        shits += S_HIT;
-                        const unsigned SUIT = is_flush(chits, dhits, hhits, shits);
-                        if(SUIT){
-                                switch(SUIT){
-                                        case 1:
-                                                rank = CLUB_NORMALIZED;
-                                                break;
-                                        case 2:
-                                                rank = DIAMOND_NORMALIZED;
-                                                break;
-                                        case 3:
-                                                rank = HEART_NORMALIZED;
-                                                break;
-                                        case 4:
-                                                rank = SPADE_NORMALIZED;
-                                                break;
-                                }
-
-                                type = FLUSH;
-                        }
-                }
+                chits += C_HIT;
+                dhits += D_HIT;
+                hhits += H_HIT;
+                shits += S_HIT;
         }
 
-        // check for full-house
+        unsigned suit;
+        // check for full-house, flush, and two pair
         if(type < FULL_HOUSE && is_full_house(triplet, &pairs)){
                 type = FULL_HOUSE;
-        }
+        }else if(type < FLUSH && (suit = is_flush(chits, dhits, hhits, shits))){
+                switch(suit){
+                        case 1:
+                                rank = CLUB_NORMALIZED;
+                                break;
+                        case 2:
+                                rank = DIAMOND_NORMALIZED;
+                                break;
+                        case 3:
+                                rank = HEART_NORMALIZED;
+                                break;
+                        case 4:
+                                rank = SPADE_NORMALIZED;
+                                break;
+                }
 
-        // check for two pair
-        if(type < TWO_PAIR && is_two_pair(&pairs)){
+                type = FLUSH;
+        }else if(type < TWO_PAIR && is_two_pair(&pairs)){
                 type = TWO_PAIR;
         }
 
@@ -507,16 +500,16 @@ static unsigned long long get_card(unsigned long long *deck){
 }
 
 static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS){
-        if(CHITS == 5){
+        if(CHITS >= 5){
                 return 1;
         }
-        if(DHITS == 5){
+        if(DHITS >= 5){
                 return 2;
         }
-        if(HHITS == 5){
+        if(HHITS >= 5){
                 return 3;
         }
-        if(SHITS == 5){
+        if(SHITS >= 5){
                 return 4;
         }
 
