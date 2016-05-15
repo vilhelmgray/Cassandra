@@ -311,13 +311,13 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
 
                 // check for flush
                 if(type < FLUSH){
-                        chits += (C) ? 1 : 0;
-                        dhits += (D) ? 1 : 0;
-                        hhits += (H) ? 1 : 0;
-                        shits += (S) ? 1 : 0;
-                        unsigned suit = 0;
-                        if((suit = is_flush(chits, dhits, hhits, shits))){
-                                switch(suit){
+                        chits += (C > 0);
+                        dhits += (D > 0);
+                        hhits += (H > 0);
+                        shits += (S > 0);
+                        const unsigned SUIT = is_flush(chits, dhits, hhits, shits);
+                        if(SUIT){
+                                switch(SUIT){
                                         case 1:
                                                 rank = CLUB_NORMALIZED;
                                                 break;
