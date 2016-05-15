@@ -44,20 +44,20 @@ struct hand{
 };
 
 static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_counter counter, const unsigned long COMB);
-static struct hand determine_hand(unsigned long long hand);
+static struct hand determine_hand(const unsigned long long HAND);
 static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS);
 static unsigned evaluate_opponents(unsigned numPlayers);
-static unsigned find_extrema(unsigned lump, unsigned num);
+static unsigned find_extrema(const unsigned LUMP, unsigned num);
 static unsigned long long get_card(unsigned long long *deck);
-static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits);
-static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS);
+static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
 static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs);
-static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s);
-static unsigned is_straight(unsigned lump, unsigned smask);
-static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask);
-static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s);
+static unsigned is_pair(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
+static unsigned is_straight(const unsigned LUMP, const unsigned SMASK);
+static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK);
+static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
 static unsigned is_two_pair(unsigned *const pairs);
-static double kelly(double b, double c, double p);
+static double kelly(const double B, const double C, const double P);
 static unsigned long long parse_card(const char *card_str);
 static void showdown(struct win_counter *const counter, const struct hand best_hand, const unsigned long long COMMUNITY, const unsigned long long DECK);
 
@@ -237,16 +237,16 @@ static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_co
         }while(1);
 }
 
-static struct hand determine_hand(unsigned long long hand){
+static struct hand determine_hand(const unsigned long long HAND){
         enum hand_t type = HIGH_CARD;
 
-        unsigned club = hand & 0x1FFF;
-        unsigned diamond = hand>>13 & 0x1FFF;
-        unsigned heart = hand>>26 & 0x1FFF;
-        unsigned spade = hand>>39 & 0x1FFF;
+        const unsigned CLUB = HAND & 0x1FFF;
+        const unsigned DIAMOND = HAND>>13 & 0x1FFF;
+        const unsigned HEART = HAND>>26 & 0x1FFF;
+        const unsigned SPADE = HAND>>39 & 0x1FFF;
 
-        unsigned lump = club | diamond | heart | spade;
-        unsigned rank = (lump>>1) | ((lump&0x1)<<12);
+        const unsigned LUMP = CLUB | DIAMOND | HEART | SPADE;
+        unsigned rank = (LUMP>>1) | ((LUMP&0x1)<<12);
         rank = find_extrema(rank, 5);
 
         unsigned pairs = 0;
@@ -260,53 +260,53 @@ static struct hand determine_hand(unsigned long long hand){
 
         for(unsigned i = 0; i < 13; i++){
                 if(i < 10){
-                        unsigned smask = 0xF<<i | 1<<((i+4)%13);
+                        const unsigned SMASK = 0xF<<i | 1<<((i+4)%13);
 
                         // check for straight
-                        if(type <= STRAIGHT && is_straight(lump, smask)){
+                        if(type <= STRAIGHT && is_straight(LUMP, SMASK)){
                                 rank = i;
                                 type = STRAIGHT;
                         }
                         // check for straight-flush
-                        if(type >= STRAIGHT && is_straight_flush(club, diamond, heart, spade, smask)){
+                        if(type >= STRAIGHT && is_straight_flush(CLUB, DIAMOND, HEART, SPADE, SMASK)){
                                 rank = i;
                                 type = STRAIGHT_FLUSH;
                         }
                 }
 
-                unsigned c = club & 1<<i;
-                unsigned d = diamond & 1<<i;
-                unsigned h = heart & 1<<i;
-                unsigned s = spade & 1<<i;
+                const unsigned C = CLUB & 1<<i;
+                const unsigned D = DIAMOND & 1<<i;
+                const unsigned H = HEART & 1<<i;
+                const unsigned S = SPADE & 1<<i;
 
                 // check for pair
-                if(type <= FULL_HOUSE && is_pair(c, d, h, s)){
+                if(type <= FULL_HOUSE && is_pair(C, D, H, S)){
                         pairs |= 1<<i;
                         if(type < ONE_PAIR){
                                 type = ONE_PAIR;
 
-                                unsigned normalize = lump & (~pairs);
+                                unsigned normalize = LUMP & (~pairs);
                                 normalize = (normalize>>1) | ((normalize&0x1)<<12);
                                 rank = find_extrema(normalize, 3);
                         }
 
                         // check for three-of-a-kind
-                        if(is_toak(c, d, h, s)){
+                        if(is_toak(C, D, H, S)){
                                 triplet = 1<<i;
                                 if(type < THREE_OF_A_KIND){
                                         type = THREE_OF_A_KIND;
 
-                                        unsigned normalize = lump & (~triplet);
+                                        unsigned normalize = LUMP & (~triplet);
                                         normalize = (normalize>>1) | ((normalize&0x1)<<12);
                                         rank = find_extrema(normalize, 2);
                                 }
 
                                 // check for four-of-a-kind
-                                if(is_foak(c, d, h, s)){
+                                if(is_foak(C, D, H, S)){
                                         quadruplet = 1<<i;
                                         type = FOUR_OF_A_KIND;
 
-                                        unsigned normalize = lump & (~quadruplet);
+                                        unsigned normalize = LUMP & (~quadruplet);
                                         normalize = (normalize>>1) | ((normalize&0x1)<<12);
                                         rank = find_extrema(normalize, 1);
                                 }
@@ -315,24 +315,24 @@ static struct hand determine_hand(unsigned long long hand){
 
                 // check for flush
                 if(type < FLUSH){
-                        chits += (c) ? 1 : 0;
-                        dhits += (d) ? 1 : 0;
-                        hhits += (h) ? 1 : 0;
-                        shits += (s) ? 1 : 0;
+                        chits += (C) ? 1 : 0;
+                        dhits += (D) ? 1 : 0;
+                        hhits += (H) ? 1 : 0;
+                        shits += (S) ? 1 : 0;
                         unsigned suit = 0;
                         if((suit = is_flush(chits, dhits, hhits, shits))){
                                 switch(suit){
                                         case 1:
-                                                suit = club;
+                                                suit = CLUB;
                                                 break;
                                         case 2:
-                                                suit = diamond;
+                                                suit = DIAMOND;
                                                 break;
                                         case 3:
-                                                suit = heart;
+                                                suit = HEART;
                                                 break;
                                         case 4:
-                                                suit = spade;
+                                                suit = SPADE;
                                                 break;
                                 }
                                 rank = ((suit&0x1)<<13) | suit;
@@ -351,7 +351,7 @@ static struct hand determine_hand(unsigned long long hand){
         if(type < TWO_PAIR && is_two_pair(&pairs)){
                 type = TWO_PAIR;
 
-                unsigned normalize = lump & (~pairs);
+                unsigned normalize = LUMP & (~pairs);
                 normalize = (normalize>>1) | ((normalize&0x1)<<12);
                 rank = find_extrema(normalize, 1);
         }
@@ -418,13 +418,13 @@ static unsigned evaluate_opponents(unsigned numPlayers){
         return pot;
 }
 
-static unsigned find_extrema(unsigned lump, unsigned num){
+static unsigned find_extrema(const unsigned LUMP, unsigned num){
         unsigned extrema = 0;
 
         for(int i = 12; num && i >= 0; i--){
-                unsigned card = 0x1U << i;
-                if(lump & card){
-                        extrema |= card;
+                const unsigned CARD = 1 << i;
+                if(LUMP & CARD){
+                        extrema |= CARD;
                         num--;
                 }
         }
@@ -458,25 +458,25 @@ static unsigned long long get_card(unsigned long long *deck){
         return card;
 }
 
-static unsigned is_flush(unsigned chits, unsigned dhits, unsigned hhits, unsigned shits){
-        if(chits == 5){
+static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS){
+        if(CHITS == 5){
                 return 1;
         }
-        if(dhits == 5){
+        if(DHITS == 5){
                 return 2;
         }
-        if(hhits == 5){
+        if(HHITS == 5){
                 return 3;
         }
-        if(shits == 5){
+        if(SHITS == 5){
                 return 4;
         }
 
         return 0;
 }
 
-static unsigned is_foak(unsigned c, unsigned d, unsigned h, unsigned s){
-        if(c & d & h & s){
+static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
+        if(C & D & H & S){
                 return 1;
         }
 
@@ -502,32 +502,32 @@ static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
         return 1;
 }
 
-static unsigned is_pair(unsigned c, unsigned d, unsigned h, unsigned s){
-        if(c & d || c & h || c & s || d & h || d & s || h & s){
+static unsigned is_pair(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
+        if(C & D || C & H || C & S || D & H || D & S || H & S){
                 return 1;
         }
 
         return 0;
 }
 
-static unsigned is_straight(unsigned lump, unsigned smask){
-        if((lump & smask) == smask){
+static unsigned is_straight(const unsigned LUMP, const unsigned SMASK){
+        if((LUMP & SMASK) == SMASK){
                 return 1;
         }
         
         return 0;
 }
 
-static unsigned is_straight_flush(unsigned club, unsigned diamond, unsigned heart, unsigned spade, unsigned smask){
-        if((club & smask) == smask || (diamond & smask) == smask || (heart & smask) == smask || (spade & smask) == smask){
+static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK){
+        if((CLUB & SMASK) == SMASK || (DIAMOND & SMASK) == SMASK || (HEART & SMASK) == SMASK || (SPADE & SMASK) == SMASK){
                 return 1;
         }
 
         return 0;
 }
 
-static unsigned is_toak(unsigned c, unsigned d, unsigned h, unsigned s){
-        if(c & d & h || c & d & s || c & h & s || d & h & s){
+static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
+        if(C & D & H || C & D & S || C & H & S || D & H & S){
                 return 1;
         }
 
@@ -562,17 +562,17 @@ static unsigned is_two_pair(unsigned *const pairs){
 }
 
 /* Kelly equation for poker:
- * where        b = net odds received on the wager
- *              c = retained pot / current bankroll
- *              p = probability of winning
+ * where        B = net odds received on the wager
+ *              C = retained pot / current bankroll
+ *              P = probability of winning
  *
- * f = ((b + c/f)*p - (1 - p))/(b + c/f)
+ * F = ((B + C/F)*P - (1 - P))/(B + C/F)
  * which simplifies to:
- * f = (sqrt((1 + c - p - b*p)**2 + 4*b*c*p) - (1 + c - p - b*p))/(2*b)
+ * F = (sqrt((1 + C - P - B*P)**2 + 4*B*C*P) - (1 + C - P - B*P))/(2*B)
  */
-static double kelly(double b, double c, double p){
-        double temp = 1 + c - p - b*p;
-        return (sqrt(temp*temp + 4*b*c*p) - temp)/(2*b);
+static double kelly(const double B, const double C, const double P){
+        const double TEMP = 1 + C - P - B*P;
+        return (sqrt(TEMP*TEMP + 4*B*C*P) - TEMP)/(2*B);
 }
 
 static unsigned long long parse_card(const char *card_str){
