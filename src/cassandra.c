@@ -51,12 +51,9 @@ static unsigned find_extrema(const unsigned LUMP, unsigned num);
 static void generate_lookup(void);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS);
-static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
 static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs);
-static unsigned is_pair(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
 static unsigned is_straight(const unsigned LUMP, const unsigned SMASK);
 static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK);
-static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, const unsigned S);
 static unsigned is_two_pair(unsigned *const pairs);
 static double kelly(const double B, const double C, const double P);
 static unsigned long long parse_card(const char *card_str);
@@ -294,35 +291,35 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
                 const unsigned H = HEART_NORMALIZED & 1<<i;
                 const unsigned S = SPADE_NORMALIZED & 1<<i;
 
-                // check for pair
-                if(is_pair(C, D, H, S)){
-                        pairs |= 1<<i;
-                        if(type < ONE_PAIR){
-                                type = ONE_PAIR;
-                        }
+                const unsigned C_HIT = (C > 0);
+                const unsigned D_HIT = (D > 0);
+                const unsigned H_HIT = (H > 0);
+                const unsigned S_HIT = (S > 0);
 
-                        // check for three-of-a-kind
-                        if(is_toak(C, D, H, S)){
+                switch(C_HIT + D_HIT + H_HIT + S_HIT){
+                        case 4:
+                                quadruplet = 1<<i;
+                                type = FOUR_OF_A_KIND;
+                                break;
+                        case 3:
                                 triplet = 1<<i;
                                 if(type < THREE_OF_A_KIND){
                                         type = THREE_OF_A_KIND;
                                 }
-
-                                // check for four-of-a-kind
-                                if(is_foak(C, D, H, S)){
-                                        quadruplet = 1<<i;
-                                        type = FOUR_OF_A_KIND;
-                                        break;
+                        case 2:
+                                pairs |= 1<<i;
+                                if(type < ONE_PAIR){
+                                        type = ONE_PAIR;
                                 }
-                        }
+                                break;
                 }
 
                 // check for flush
                 if(type < FLUSH){
-                        chits += (C > 0);
-                        dhits += (D > 0);
-                        hhits += (H > 0);
-                        shits += (S > 0);
+                        chits += C_HIT;
+                        dhits += D_HIT;
+                        hhits += H_HIT;
+                        shits += S_HIT;
                         const unsigned SUIT = is_flush(chits, dhits, hhits, shits);
                         if(SUIT){
                                 switch(SUIT){
@@ -521,10 +518,6 @@ static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsig
         return 0;
 }
 
-static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        return C & D & H & S;
-}
-
 static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
         if(!TRIPLET){
                 return 0;
@@ -544,20 +537,12 @@ static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
         return 1;
 }
 
-static unsigned is_pair(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        return C & D || C & H || C & S || D & H || D & S || H & S;
-}
-
 static unsigned is_straight(const unsigned LUMP, const unsigned SMASK){
         return (LUMP & SMASK) == SMASK;
 }
 
 static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK){
         return is_straight(CLUB, SMASK) || is_straight(DIAMOND, SMASK) || is_straight(HEART, SMASK) || is_straight(SPADE, SMASK);
-}
-
-static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        return C & D & H || C & D & S || C & H & S || D & H & S;
 }
 
 static unsigned is_two_pair(unsigned *const pairs){
