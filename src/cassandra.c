@@ -481,11 +481,7 @@ static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsig
 }
 
 static unsigned is_foak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        if(C & D & H & S){
-                return 1;
-        }
-
-        return 0;
+        return C & D & H & S;
 }
 
 static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
@@ -508,35 +504,19 @@ static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs){
 }
 
 static unsigned is_pair(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        if(C & D || C & H || C & S || D & H || D & S || H & S){
-                return 1;
-        }
-
-        return 0;
+        return C & D || C & H || C & S || D & H || D & S || H & S;
 }
 
 static unsigned is_straight(const unsigned LUMP, const unsigned SMASK){
-        if((LUMP & SMASK) == SMASK){
-                return 1;
-        }
-        
-        return 0;
+        return (LUMP & SMASK) == SMASK;
 }
 
 static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK){
-        if((CLUB & SMASK) == SMASK || (DIAMOND & SMASK) == SMASK || (HEART & SMASK) == SMASK || (SPADE & SMASK) == SMASK){
-                return 1;
-        }
-
-        return 0;
+        return is_straight(CLUB, SMASK) || is_straight(DIAMOND, SMASK) || is_straight(HEART, SMASK) || is_straight(SPADE, SMASK);
 }
 
 static unsigned is_toak(const unsigned C, const unsigned D, const unsigned H, const unsigned S){
-        if(C & D & H || C & D & S || C & H & S || D & H & S){
-                return 1;
-        }
-
-        return 0;
+        return C & D & H || C & D & S || C & H & S || D & H & S;
 }
 
 static unsigned is_two_pair(unsigned *const pairs){
