@@ -314,29 +314,31 @@ static struct hand determine_hand(unsigned long long hand){
                 }
 
                 // check for flush
-                chits += (c) ? 1 : 0;
-                dhits += (d) ? 1 : 0;
-                hhits += (h) ? 1 : 0;
-                shits += (s) ? 1 : 0;
-                unsigned suit = 0;
-                if(type <= FLUSH && (suit = is_flush(chits, dhits, hhits, shits))){
-                        switch(suit){
-                                case 1:
-                                        suit = club;
-                                        break;
-                                case 2:
-                                        suit = diamond;
-                                        break;
-                                case 3:
-                                        suit = heart;
-                                        break;
-                                case 4:
-                                        suit = spade;
-                                        break;
-                        }
-                        rank = ((suit&0x1)<<13) | suit;
+                if(type < FLUSH){
+                        chits += (c) ? 1 : 0;
+                        dhits += (d) ? 1 : 0;
+                        hhits += (h) ? 1 : 0;
+                        shits += (s) ? 1 : 0;
+                        unsigned suit = 0;
+                        if((suit = is_flush(chits, dhits, hhits, shits))){
+                                switch(suit){
+                                        case 1:
+                                                suit = club;
+                                                break;
+                                        case 2:
+                                                suit = diamond;
+                                                break;
+                                        case 3:
+                                                suit = heart;
+                                                break;
+                                        case 4:
+                                                suit = spade;
+                                                break;
+                                }
+                                rank = ((suit&0x1)<<13) | suit;
 
-                        type = FLUSH;
+                                type = FLUSH;
+                        }
                 }
         }
 
