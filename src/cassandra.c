@@ -245,9 +245,30 @@ static struct hand determine_hand(const unsigned long long HAND){
         const unsigned HEART = HAND>>26 & 0x1FFF;
         const unsigned SPADE = HAND>>39 & 0x1FFF;
 
-        const unsigned LUMP = CLUB | DIAMOND | HEART | SPADE;
-        unsigned rank = (LUMP>>1) | ((LUMP&0x1)<<12);
-        rank = find_extrema(rank, 5);
+        unsigned lump = CLUB | DIAMOND | HEART | SPADE;
+        lump |= (lump & 0x1) << 13;
+
+        unsigned rank;
+        for(unsigned i = 0; i < 10; i++){
+                const unsigned SMASK = 0x1F << i;
+
+                // check for straight
+                if(type <= STRAIGHT && is_straight(lump, SMASK)){
+                        rank = i;
+                        type = STRAIGHT;
+                }
+                // check for straight-flush
+                if(type >= STRAIGHT && is_straight_flush(CLUB, DIAMOND, HEART, SPADE, SMASK)){
+                        rank = i;
+                        type = STRAIGHT_FLUSH;
+                }
+        }
+
+        const unsigned CLUB_NORMALIZED = (CLUB >> 1) | ((CLUB & 0X1) << 12);
+        const unsigned DIAMOND_NORMALIZED = (DIAMOND >> 1) | ((DIAMOND & 0X1) << 12);
+        const unsigned HEART_NORMALIZED = (HEART >> 1) | ((HEART & 0X1) << 12);
+        const unsigned SPADE_NORMALIZED = (SPADE >> 1) | ((SPADE & 0X1) << 12);
+        const unsigned LUMP_NORMALIZED = lump >> 1;
 
         unsigned pairs = 0;
         unsigned triplet = 0;
@@ -259,35 +280,16 @@ static struct hand determine_hand(const unsigned long long HAND){
         unsigned shits = 0;
 
         for(unsigned i = 0; i < 13; i++){
-                if(i < 10){
-                        const unsigned SMASK = 0xF<<i | 1<<((i+4)%13);
-
-                        // check for straight
-                        if(type <= STRAIGHT && is_straight(LUMP, SMASK)){
-                                rank = i;
-                                type = STRAIGHT;
-                        }
-                        // check for straight-flush
-                        if(type >= STRAIGHT && is_straight_flush(CLUB, DIAMOND, HEART, SPADE, SMASK)){
-                                rank = i;
-                                type = STRAIGHT_FLUSH;
-                        }
-                }
-
-                const unsigned C = CLUB & 1<<i;
-                const unsigned D = DIAMOND & 1<<i;
-                const unsigned H = HEART & 1<<i;
-                const unsigned S = SPADE & 1<<i;
+                const unsigned C = CLUB_NORMALIZED & 1<<i;
+                const unsigned D = DIAMOND_NORMALIZED & 1<<i;
+                const unsigned H = HEART_NORMALIZED & 1<<i;
+                const unsigned S = SPADE_NORMALIZED & 1<<i;
 
                 // check for pair
                 if(type <= FULL_HOUSE && is_pair(C, D, H, S)){
                         pairs |= 1<<i;
                         if(type < ONE_PAIR){
                                 type = ONE_PAIR;
-
-                                unsigned normalize = LUMP & (~pairs);
-                                normalize = (normalize>>1) | ((normalize&0x1)<<12);
-                                rank = find_extrema(normalize, 3);
                         }
 
                         // check for three-of-a-kind
@@ -295,20 +297,12 @@ static struct hand determine_hand(const unsigned long long HAND){
                                 triplet = 1<<i;
                                 if(type < THREE_OF_A_KIND){
                                         type = THREE_OF_A_KIND;
-
-                                        unsigned normalize = LUMP & (~triplet);
-                                        normalize = (normalize>>1) | ((normalize&0x1)<<12);
-                                        rank = find_extrema(normalize, 2);
                                 }
 
                                 // check for four-of-a-kind
                                 if(is_foak(C, D, H, S)){
                                         quadruplet = 1<<i;
                                         type = FOUR_OF_A_KIND;
-
-                                        unsigned normalize = LUMP & (~quadruplet);
-                                        normalize = (normalize>>1) | ((normalize&0x1)<<12);
-                                        rank = find_extrema(normalize, 1);
                                 }
                         }
                 }
@@ -323,19 +317,18 @@ static struct hand determine_hand(const unsigned long long HAND){
                         if((suit = is_flush(chits, dhits, hhits, shits))){
                                 switch(suit){
                                         case 1:
-                                                suit = CLUB;
+                                                rank = CLUB_NORMALIZED;
                                                 break;
                                         case 2:
-                                                suit = DIAMOND;
+                                                rank = DIAMOND_NORMALIZED;
                                                 break;
                                         case 3:
-                                                suit = HEART;
+                                                rank = HEART_NORMALIZED;
                                                 break;
                                         case 4:
-                                                suit = SPADE;
+                                                rank = SPADE_NORMALIZED;
                                                 break;
                                 }
-                                rank = ((suit&0x1)<<13) | suit;
 
                                 type = FLUSH;
                         }
@@ -350,16 +343,28 @@ static struct hand determine_hand(const unsigned long long HAND){
         // check for two pair
         if(type < TWO_PAIR && is_two_pair(&pairs)){
                 type = TWO_PAIR;
+        }
 
-                unsigned normalize = LUMP & (~pairs);
-                normalize = (normalize>>1) | ((normalize&0x1)<<12);
-                rank = find_extrema(normalize, 1);
+        switch(type){
+                case HIGH_CARD:
+                        rank = find_extrema(LUMP_NORMALIZED, 5);
+                        break;
+                case ONE_PAIR:
+                        rank = find_extrema(LUMP_NORMALIZED & (~pairs), 3);
+                        break;
+                case TWO_PAIR:
+                        rank = find_extrema(LUMP_NORMALIZED & (~pairs), 1);
+                        break;
+                case THREE_OF_A_KIND:
+                        rank = find_extrema(LUMP_NORMALIZED & (~triplet), 2);
+                case FOUR_OF_A_KIND:
+                        rank = find_extrema(LUMP_NORMALIZED & (~quadruplet), 1);
         }
 
         struct hand best_hand = { .category = type,
-                                  .quadruplet = (quadruplet>>1) | ((quadruplet&0x1)<<12),
-                                  .triplet = (triplet>>1) | ((triplet&0x1)<<12),
-                                  .pairs = (pairs>>1) | ((pairs&0x1)<<12),
+                                  .quadruplet = quadruplet,
+                                  .triplet = triplet,
+                                  .pairs = pairs,
                                   .rank = rank };
 
         return best_hand;
