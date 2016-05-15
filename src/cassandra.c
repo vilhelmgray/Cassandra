@@ -44,7 +44,7 @@ struct hand{
 };
 
 static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_counter counter, const unsigned long COMB);
-static struct hand determine_hand(const unsigned long long HAND);
+static void determine_hand(struct hand *const best_hand, const unsigned long long HAND);
 static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS);
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(const unsigned LUMP, unsigned num);
@@ -142,9 +142,10 @@ int main(void){
         printf("==River==\n");
         unsigned long long river = get_card(&deck);
 
+        struct hand best_hand;
+        determine_hand(&best_hand, hand|flop|turn|river);
         counter.split = 0;
         counter.win = 0;
-        struct hand best_hand = determine_hand(hand|flop|turn|river);
         showdown(&counter, best_hand, flop|turn|river, deck);
 
         const unsigned RIVER_COMB = 990;
@@ -237,7 +238,7 @@ static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_co
         }while(1);
 }
 
-static struct hand determine_hand(const unsigned long long HAND){
+static void determine_hand(struct hand *const best_hand, const unsigned long long HAND){
         enum hand_t type = HIGH_CARD;
 
         const unsigned CLUB = HAND & 0x1FFF;
@@ -361,13 +362,11 @@ static struct hand determine_hand(const unsigned long long HAND){
                         rank = find_extrema(LUMP_NORMALIZED & (~quadruplet), 1);
         }
 
-        struct hand best_hand = { .category = type,
-                                  .quadruplet = quadruplet,
-                                  .triplet = triplet,
-                                  .pairs = pairs,
-                                  .rank = rank };
-
-        return best_hand;
+        best_hand->category = type;
+        best_hand->quadruplet = quadruplet;
+        best_hand->triplet = triplet;
+        best_hand->pairs = pairs;
+        best_hand->rank = rank;
 }
 
 static void determine_win_counter(struct win_counter *const counter, const unsigned long long DECK, const unsigned long long COMMUNITY, const unsigned long long HAND, const unsigned NUM_CARDS){
@@ -377,7 +376,9 @@ static void determine_win_counter(struct win_counter *const counter, const unsig
         unsigned long long cards = (1ULL << NUM_CARDS) - 1;
         do{
                 if((cards & DECK) == cards){
-                        struct hand best_hand = determine_hand(HAND|COMMUNITY|cards);
+                        struct hand best_hand;
+                        determine_hand(&best_hand, HAND|COMMUNITY|cards);
+
                         showdown(counter, best_hand, COMMUNITY|cards, DECK & (~cards));
                 }
 
@@ -599,7 +600,9 @@ static void showdown(struct win_counter *const counter, const struct hand best_h
         unsigned long long cards = 0x3;
         do{
                 if((cards & DECK) == cards){
-                        const struct hand test_hand = determine_hand(cards|COMMUNITY);
+                        struct hand test_hand;
+                        determine_hand(&test_hand, cards|COMMUNITY);
+
                         if(test_hand.category < best_hand.category){
                                 counter->win++;
                         }else if(test_hand.category == best_hand.category){
