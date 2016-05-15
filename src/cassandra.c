@@ -247,30 +247,37 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
         const unsigned HEART = HAND>>26 & 0x1FFF;
         const unsigned SPADE = HAND>>39 & 0x1FFF;
 
-        unsigned lump = CLUB | DIAMOND | HEART | SPADE;
-        lump |= (lump & 0x1) << 13;
+        const unsigned CLUB_ACED = CLUB | (CLUB & 0x1) << 13;
+        const unsigned DIAMOND_ACED = DIAMOND | (DIAMOND & 0x1) << 13;
+        const unsigned HEART_ACED = HEART | (HEART & 0x1) << 13;
+        const unsigned SPADE_ACED = SPADE | (SPADE & 0x1) << 13;
+
+        const unsigned LUMP = CLUB_ACED | DIAMOND_ACED | HEART_ACED | SPADE_ACED;
 
         unsigned rank;
         for(unsigned i = 0; i < 10; i++){
-                const unsigned SMASK = 0x1F << i;
+                const unsigned SMASK = 0x3E00 >> i;
 
                 // check for straight
-                if(type <= STRAIGHT && is_straight(lump, SMASK)){
-                        rank = i;
-                        type = STRAIGHT;
-                }
-                // check for straight-flush
-                if(type >= STRAIGHT && is_straight_flush(CLUB, DIAMOND, HEART, SPADE, SMASK)){
-                        rank = i;
-                        type = STRAIGHT_FLUSH;
+                if(is_straight(LUMP, SMASK)){
+                        // check for straight-flush
+                        if(is_straight_flush(CLUB_ACED, DIAMOND_ACED, HEART_ACED, SPADE_ACED, SMASK)){
+                                type = STRAIGHT_FLUSH;
+                        }else{
+                                type = STRAIGHT;
+                        }
+
+                        rank = 9 - i;
+
+                        break;
                 }
         }
 
-        const unsigned CLUB_NORMALIZED = (CLUB >> 1) | ((CLUB & 0X1) << 12);
-        const unsigned DIAMOND_NORMALIZED = (DIAMOND >> 1) | ((DIAMOND & 0X1) << 12);
-        const unsigned HEART_NORMALIZED = (HEART >> 1) | ((HEART & 0X1) << 12);
-        const unsigned SPADE_NORMALIZED = (SPADE >> 1) | ((SPADE & 0X1) << 12);
-        const unsigned LUMP_NORMALIZED = lump >> 1;
+        const unsigned CLUB_NORMALIZED = CLUB_ACED >> 1;
+        const unsigned DIAMOND_NORMALIZED = DIAMOND_ACED >> 1;
+        const unsigned HEART_NORMALIZED = HEART_ACED >> 1;
+        const unsigned SPADE_NORMALIZED = SPADE_ACED >> 1;
+        const unsigned LUMP_NORMALIZED = LUMP >> 1;
 
         unsigned pairs = 0;
         unsigned triplet = 0;
