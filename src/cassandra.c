@@ -365,6 +365,9 @@ static void determine_hand(struct hand *const best_hand, const unsigned long lon
                 case THREE_OF_A_KIND:
                         rank = find_extrema(LUMP_NORMALIZED & (~triplet), 2);
                         break;
+                case FLUSH:
+                        rank = find_extrema(rank, 5);
+                        break;
                 case FOUR_OF_A_KIND:
                         rank = find_extrema(LUMP_NORMALIZED & (~quadruplet), 1);
                         break;
