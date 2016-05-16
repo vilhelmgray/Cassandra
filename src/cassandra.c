@@ -443,9 +443,9 @@ static unsigned find_extrema(const unsigned LUMP, unsigned num){
 }
 
 static void generate_lookup(void){
-        printf("const struct probability begin_prob[325] = {\n");
+        printf("const struct probability begin_prob[169] = {\n");
 
-        const unsigned TOT_CARDS = 26;
+        const unsigned TOT_CARDS = 13;
         const unsigned long long BOUNDARY = 1ULL << TOT_CARDS;
 
         unsigned long long cards = 0x3;
@@ -469,6 +469,16 @@ static void generate_lookup(void){
                 cards |= pos_mask;
                 cards |= (1ULL << card_num-1) - 1;
         }while(cards < BOUNDARY);
+
+        for(unsigned long long i = 1; i < BOUNDARY; i <<= 1){
+                for(unsigned long long j = i; j < BOUNDARY; j <<= 1){
+                        struct win_counter counter = {0};
+                        const unsigned long long HAND = j | i<<13;
+                        determine_win_counter(&counter, 0xFFFFFFFFFFFFF & (~HAND), 0, HAND, 5);
+                        printf("\t{ .hand = 0x%llX, .counter = { .split = %lu, .win = %lu } },\n", HAND, counter.split, counter.win);
+                }
+        }
+
 
         printf("};\n");
 }
