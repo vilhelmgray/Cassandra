@@ -49,6 +49,7 @@ static void determine_win_counter(struct win_counter *const counter, const unsig
 static unsigned evaluate_opponents(unsigned numPlayers);
 static unsigned find_extrema(const unsigned LUMP, unsigned num);
 static void generate_lookup(void);
+static size_t get_lookup_index(unsigned long long hand);
 static unsigned long long get_card(unsigned long long *deck);
 static unsigned is_flush(const unsigned CHITS, const unsigned DHITS, const unsigned HHITS, const unsigned SHITS);
 static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs);
@@ -102,16 +103,9 @@ int main(void){
         unsigned long long hand = get_card(&deck);
         hand |= get_card(&deck);
 
-        const size_t NUM_PROB = sizeof(begin_prob)/sizeof(*begin_prob);
-        size_t h = 0;
-        for(h = 0; h < NUM_PROB; h++){
-                if(begin_prob[h].hand == hand){
-                        break;
-                }
-        }
-
+        const size_t H = get_lookup_index(hand);
         const unsigned long HAND_COMB = 2097572400UL;
-        betting_round(&bankroll, &pot, begin_prob[h].counter, HAND_COMB);
+        betting_round(&bankroll, &pot, begin_prob[H].counter, HAND_COMB);
         printf("Pot: %u\n", pot);
 
         printf("==Flop==\n");
@@ -481,6 +475,34 @@ static void generate_lookup(void){
 
 
         printf("};\n");
+}
+
+static size_t get_lookup_index(unsigned long long hand){
+        unsigned long long first;
+        do{
+                first = hand & 0x1FFF;
+                hand >>= 13;
+        }while(!first);
+
+        while(hand >> 13){
+                hand >>= 13;
+        }
+
+        if(hand > first){
+                hand |= first<<13;
+        }else{
+                hand = first | hand<<13;
+        }
+
+        size_t h;
+        const size_t NUM_PROB = sizeof(begin_prob)/sizeof(*begin_prob);
+        for(h = 0; h < NUM_PROB; h++){
+                if(begin_prob[h].hand == hand){
+                        break;
+                }
+        }
+
+        return h;
 }
 
 static unsigned long long get_card(unsigned long long *deck){
