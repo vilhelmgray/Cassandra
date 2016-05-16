@@ -28,6 +28,6 @@ struct probability{
         struct win_counter counter;
 };
 
-extern const struct probability begin_prob[1326];
+extern const struct probability begin_prob[169];
 
 #endif
