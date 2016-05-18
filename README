@@ -6,11 +6,10 @@ About
 Cassandra uses the Kelly criterion to determine the optimum betting
 amount for a Texas hold 'em player during betting rounds.
 
-Update (May 13, 2016):
+Update (May 18, 2016):
 I discovered errors in how an earlier version of Cassandra ranked
-various hands. Specific probabilities listed in this README, as well as
-the "Results and Musings" section of this README, were written down
-based on the output of this incorrect earlier version of Cassandra.
+various hands. Specific probabilities listed in this README were written
+down based on the output of that incorrect earlier version of Cassandra.
 Updates to Cassandra have been made to correct these issues, but I shall
 keep the README text the same for now; the algorithms detailed within
 this README were not affected by the software errors.
@@ -18,8 +17,8 @@ this README were not affected by the software errors.
 Execution
 ---------
 
-Cassandra handles only a single play of a poker hand; Cassandra must
-be restarted for consecutive plays.
+Cassandra handles only a single play of a poker hand; Cassandra must be
+restarted for consecutive plays.
 
 The first two prompts respectively request the player's current bankroll
 and the retained pot of the current round; unsigned integer values are
@@ -432,37 +431,27 @@ bankroll meant little chance of growing the bankroll -- instead,
 gradually losing more and more of the bankroll until eventually going
 broke.
 
+Interestingly, betting strictly close to the optimum bet for each round
+may give away damning information about a player's hand. For example, a
+player may progressively bet higher and higher, until the river is
+revealed, and then bet a relatively low amount. An opponent may then
+realize that the river card significantly reduced the possible win
+probability for the player; the opponent may then raise a large amount,
+which the player is unable to match safely, thus forcing a fold.
+Similarly, an opponent may realize the player who bets strictly close to
+the Kelly criterion will never take a risky call, thus allowing the
+opponent to go all-in repeatedly without fear of competition, resulting
+in consistent folds for the player.
+
 It is important to note that Cassandra currently takes only the win
 probability into account (i.e. showdowns ending in a split pot are
-assumed to be losses). Furthermore, all opponents are assumed to last
-until the showdown. These assumptions drive the suggested bet amount
-lower than the true Kelly criterion since a worst case scenario is
-assumed. The fact that using this lower bet amount didn't result the
-winning of the entire Texas hold 'em poker game may very well be a
-testament to the aspect of skill required in playing poker -- it is more
-than a simple game of luck.
-
-The lookup table, used to determine the probability of winning a
-showdown when considering only the hole cards, may in a sense have
-redundant information. Since the hole cards consist of only two cards,
-the only significant combinations formed by the hole cards are pairs and
-non-pair cards; therefore, suits do not matter when determining the win
-probability -- only the ranks of the two hole cards affect the
-probability (e.g. Ten of Diamond and Ten of Spade has the same win
-probability as Ten of Heart and Ten of Club).
-
-Since the lookup table is symmetrical across suits, the size of the
-lookup table can be reduced to cover only the first two suits;
-combinations involving the other two suits have the same showdown
-outcomes as the two cards of respective rank in the reduced lookup
-table.
-
-It is interesting to consider that a pair of Aces is not hole cards
-combination most likely to win a showdown. The hole cards combination
-most likely to result in a showdown win is a pair of Tens (~61.1%
-probability), while the hole cards combination most likely to result in
-either a showdown win or split pot is a pair of Fives (~75.3%
-probability).
+assumed to be losses) and assumes no side pots. Furthermore, all
+opponents are assumed to last until the showdown. These assumptions
+drive the suggested bet amount lower than the true Kelly criterion since
+a worst case scenario is assumed. The fact that using this lower bet
+amount didn't result the winning of the entire Texas hold 'em poker game
+may very well be a testament to the aspect of skill required in playing
+poker -- it is more than a simple game of luck.
 
 Licensing
 ---------
