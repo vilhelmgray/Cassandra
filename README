@@ -360,8 +360,8 @@ will be equal to sum of the amount retained in the pot from all
 participants during the previous betting cycles, and the amount the
 player bet in the current betting cycle multiplied by the number of
 opponents remaining (since all opponents must match each others bets in
-order to stay in play for the showdown). In this case, the net gain can
-be expressed by the following equation:
+order to stay in play for the showdown). In this case, assuming no side
+pots, the net gain can be expressed by the following equation:
 
     net_gain = bet_amount * num_opponents + retained_pot_amount
 
@@ -394,6 +394,30 @@ the exponential operator:
 
     f = ((n + c/f)*p - (1 - p))/(n + c/f)
     f = (sqrt((1+c-p-n*p)**2 + 4*n*c*p) - (1+c-p-n*p))/(2*n)
+
+Determing the closed form solution for the Kelly criterion of bets with
+more than two outcomes is more difficult, so Cassandra only considers
+the win probability of a given hand. However, to be more accurate, the
+formula should consider the split pot probability. Assuming no side
+pots, a simplified (worse case scenario) split pot net odds is simply
+the win net odds divided by the number of opponents; where "z" is the
+split pot net odds, "b" is the win net odds, and "n" is the number of
+opponents:
+
+    z = b/n = (n + c/f)/n
+    z = 1 + c/(f*n)
+
+Going back to the definition of the Kelly criterion, we can take into
+account both the win and split pot probabilities in the following
+expression; where "w" is the win probability, "s" is the split pot
+probability, "f" is the bet amount, "n" is the number of opponents, and
+"c" is the retained pot amount:
+
+    w*log(1 + b*f) + s*log(1 + (b/n)*f + (1 - (w+s))*log(1 - f)
+    w*log(1 + f*n + c) + s*log(1 + f + c/n) + (1 - (w+s))*log(1 - f)
+
+After plugging in the known values, the optimum bet amount is that which
+maximizes the value of the expression.
 
 Results and Musings
 -------------------
