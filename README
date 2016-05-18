@@ -6,14 +6,6 @@ About
 Cassandra uses the Kelly criterion to determine the optimum betting
 amount for a Texas hold 'em player during betting rounds.
 
-Update (May 18, 2016):
-I discovered errors in how an earlier version of Cassandra ranked
-various hands. Specific probabilities listed in this README were written
-down based on the output of that incorrect earlier version of Cassandra.
-Updates to Cassandra have been made to correct these issues, but I shall
-keep the README text the same for now; the algorithms detailed within
-this README were not affected by the software errors.
-
 Execution
 ---------
 
@@ -148,11 +140,12 @@ Example 5:
 At the start of every cycle of a betting round, the number of opponents
 is requested and must be given as an unsigned integer. The probability
 of the player winning the entire play of the current poker hand is
-printed, as well as the suggested player bet amount for the current
-turn to act. The player's actual bet amount is then requested and must
-be given as an unsigned integer. The integer 0 for the bet amount prompt
-is used to represent a check by the player, or the end of the betting
-round.
+printed along with the probability of a split pot with all of the
+opponents, as well as the suggested player bet amount (based on the win
+probability) for the current turn to act. The player's actual bet amount
+is then requested and must be given as an unsigned integer. The integer
+0 for the bet amount prompt is used to represent a check by the player,
+or the end of the betting round.
 
 Cassandra then requests the bet amount of each opponent; all opponent
 bet amounts are expected as unsigned integers. An opponent check or fold
@@ -171,23 +164,26 @@ Example 6:
     
     Cassandra excerpt:
         Number of Opponents: 3
-        Win probability: 0.262085
-        You should bet: 233
+        Win probability: 0.354770
+        Split probability: 0.000019
+        You should bet: 744
         Bet Amount: 0
         Check? [Y/n]: y
         Player #3: 0
         Player #2: 50
         Player #1: 50
         Number of Opponents: 3
-        Win probability: 0.262085
-        You should bet: 302
+        Win probability: 0.354770
+        Split probability: 0.000019
+        You should bet: 782
         Bet Amount: 50
         Player #3: 100
         Player #2: 0
         Player #1: 50
         Number of Opponents: 2
-        Win probability: 0.409539
-        You should bet: 845
+        Win probability: 0.501147
+        Split probability: 0.000710
+        You should bet: 1400
         Bet Amount: 50
         Player #2: 0
         Player #1: 0
