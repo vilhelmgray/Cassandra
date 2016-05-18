@@ -173,10 +173,13 @@ static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_co
 
                 double c = (double)(*pot)/(*bankroll);
                 double p = 1;
+		double s = 1;
                 for(unsigned i = 0; i < numOpponents; i++){
                         p *= (double)(counter.win - i)/(COMB - i);
+                        s *= (double)(counter.split - i)/(COMB - i);
                 }
                 printf("Win probability: %lf\n", p);
+                printf("Split probability: %lf\n", s);
                 double k_bet = floor(*bankroll * kelly(numOpponents, c, p));
                 printf("You should bet: %.0lf\n", k_bet);
 
