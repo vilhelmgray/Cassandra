@@ -328,17 +328,24 @@ possible hole cards in order to provide a faster response time.
 The probability of winning a one-on-one showdown does not necessarily
 match the probability of winning the play of the hand; the play of the
 hand may result in a showdown involving more than one opponent. Rather,
-the probability of winning the play of the hand is the probability of
-winning consecutive one-on-one showdowns (one for each opponent). This
-is a geometric distribution (i.e. an urn problem without replacement)
-and the probability of winning the play of the hand can be determined by
-the following multiplication equation using Capital Pi notation, where
-"PI" is the multiplication function, "i" is from 0 to the number of
-opponents, "num_win" is the number of possible winning showdowns for the
-respective betting round, and "COMB" is the total number of possible
-showdowns for the respective betting round:
+the probability of winning the play of the hand can be estimated as the
+probability of winning consecutive one-on-one showdowns (one for each
+opponent). This is a geometric distribution (i.e. an urn problem without
+replacement) and the probability of winning the play of the hand can be
+determined by the following multiplication equation using Capital Pi
+notation, where "PI" is the multiplication function, "i" is from 0 to
+the number of opponents, "num_win" is the number of possible winning
+showdowns for the respective betting round, and "COMB" is the total
+number of possible showdowns for the respective betting round:
 
     win_probability = PI((num_win - i)/(COMB - i))
+
+The actual win probability will be higher than this estimate since while
+opponent hole card combinations overlap, actual players' hole cards do
+not. For example, if one opponent has a Seven of Diamonds, then no other
+opponent has a Seven of Diamonds; i.e. all Seven of Diamonds opponent
+hole card combinations (rather than just one) are thereafter eliminated
+from consideration when calculating the player win probability.
 
 The Kelly criterion is used to determine the suggested bet amount for
 the player. Traditionally, the Kelly criterion for a single outcome is
