@@ -17,10 +17,11 @@
  * along with Cassandra.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "counter.h"
+#include "kelly.h"
 #include "lookup.h"
 
 enum hand_t{
@@ -56,7 +57,6 @@ static unsigned is_full_house(const unsigned TRIPLET, unsigned *const pairs);
 static unsigned is_straight(const unsigned LUMP, const unsigned SMASK);
 static unsigned is_straight_flush(const unsigned CLUB, const unsigned DIAMOND, const unsigned HEART, const unsigned SPADE, const unsigned SMASK);
 static unsigned is_two_pair(unsigned *const pairs);
-static double kelly(const double B, const double C, const double P);
 static unsigned long long parse_card(const char *card_str);
 static void showdown(struct win_counter *const counter, const struct hand *const BEST_HAND, const unsigned long long COMMUNITY, const unsigned long long DECK);
 
@@ -171,16 +171,8 @@ static void betting_round(unsigned *bankroll, unsigned *pot, const struct win_co
                         break;
                 }
 
-                double c = (double)(*pot)/(*bankroll);
-                double p = 1;
-		double s = 1;
-                for(unsigned i = 0; i < numOpponents; i++){
-                        p *= (double)(counter.win - i)/(COMB - i);
-                        s *= (double)(counter.split - i)/(COMB - i);
-                }
-                printf("Win probability: %lf\n", p);
-                printf("Split probability: %lf\n", s);
-                double k_bet = floor(*bankroll * kelly(numOpponents, c, p));
+                const double retained_gain = (double)(*pot)/(*bankroll);
+                double k_bet = floor(*bankroll * kelly(numOpponents, retained_gain, &counter, COMB));
                 printf("You should bet: %.0lf\n", k_bet);
 
                 unsigned bet;
@@ -603,20 +595,6 @@ static unsigned is_two_pair(unsigned *const pairs){
         *pairs |= 1 << (i-1);
 
         return 1;
-}
-
-/* Kelly equation for poker:
- * where        B = net odds received on the wager
- *              C = retained pot / current bankroll
- *              P = probability of winning
- *
- * F = ((B + C/F)*P - (1 - P))/(B + C/F)
- * which simplifies to:
- * F = (sqrt((1 + C - P - B*P)**2 + 4*B*C*P) - (1 + C - P - B*P))/(2*B)
- */
-static double kelly(const double B, const double C, const double P){
-        const double TEMP = 1 + C - P - B*P;
-        return (sqrt(TEMP*TEMP + 4*B*C*P) - TEMP)/(2*B);
 }
 
 static unsigned long long parse_card(const char *card_str){

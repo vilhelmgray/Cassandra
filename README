@@ -138,14 +138,11 @@ Example 5:
     Spade.
 
 At the start of every cycle of a betting round, the number of opponents
-is requested and must be given as an unsigned integer. The probability
-of the player winning the entire play of the current poker hand is
-printed along with the probability of a split pot with all of the
-opponents, as well as the suggested player bet amount (based on the win
-probability) for the current turn to act. The player's actual bet amount
-is then requested and must be given as an unsigned integer. The integer
-0 for the bet amount prompt is used to represent a check by the player,
-or the end of the betting round.
+is requested and must be given as an unsigned integer. The suggested
+player bet amount for the current turn to act is then printed. Next, the
+player's actual bet amount is requested and must be given as an unsigned
+integer. The integer 0 for the bet amount prompt is used to represent a
+check by the player, or the end of the betting round.
 
 Cassandra then requests the bet amount of each opponent; all opponent
 bet amounts are expected as unsigned integers. An opponent check or fold
@@ -164,26 +161,20 @@ Example 6:
     
     Cassandra excerpt:
         Number of Opponents: 3
-        Win probability: 0.354770
-        Split probability: 0.000019
-        You should bet: 744
+        You should bet: 1538
         Bet Amount: 0
         Check? [Y/n]: y
         Player #3: 0
         Player #2: 50
         Player #1: 50
         Number of Opponents: 3
-        Win probability: 0.354770
-        Split probability: 0.000019
-        You should bet: 782
+        You should bet: 1555
         Bet Amount: 50
         Player #3: 100
         Player #2: 0
         Player #1: 50
         Number of Opponents: 2
-        Win probability: 0.501147
-        Split probability: 0.000710
-        You should bet: 1400
+        You should bet: 2151
         Bet Amount: 50
         Player #2: 0
         Player #1: 0
@@ -319,7 +310,7 @@ community cards are known.
 Cassandra simulates all possible one-on-one showdowns, between an
 opponent and the player, for the respective betting round. It
 accumulates the number of possible winning, losing, and split showdowns,
-thus allowing it calculate the probability of the player's hole cards
+thus allowing it to calculate the probability of the player's hole cards
 winning the play of the hand. In the first betting round however,
 Cassandra does not perform the usual showdown simulations, but rather
 uses a precompiled lookup table containing the simulation results of all
@@ -328,11 +319,11 @@ possible hole cards in order to provide a faster response time.
 The probability of winning a one-on-one showdown does not necessarily
 match the probability of winning the play of the hand; the play of the
 hand may result in a showdown involving more than one opponent. Rather,
-the probability of winning the play of the hand can be estimated as the
+the probability of winning the play of the hand can be expressed as the
 probability of winning consecutive one-on-one showdowns (one for each
 opponent). This is a geometric distribution (i.e. an urn problem without
 replacement) and the probability of winning the play of the hand can be
-determined by the following multiplication equation using Capital Pi
+estimated by the following multiplication equation using Capital Pi
 notation, where "PI" is the multiplication function, "i" is from 0 to
 the number of opponents, "num_win" is the number of possible winning
 showdowns for the respective betting round, and "COMB" is the total
@@ -347,13 +338,40 @@ opponent has a Seven of Diamonds; i.e. all Seven of Diamonds opponent
 hole card combinations (rather than just one) are thereafter eliminated
 from consideration when calculating the player win probability.
 
-The Kelly criterion is used to determine the suggested bet amount for
-the player. Traditionally, the Kelly criterion for a single outcome is
-represented by the following formula, where "f" is the fraction of the
-current bankroll to wager, "b" is the net odds received on the wager,
-and "p" is the probability of winning:
+Similarly, the probability of splitting the play of the hand with all
+opponents can be estimated by the following multiplication equation
+using Capital Pi notation, where "PI" is the multiplication function,
+"j" is from 0 to the number of opponents, "num_split" is the number of
+possible winning showdowns for the respective betting round, and "COMB"
+is the total number of possible showdowns for the respective betting
+round:
 
-    f = (bp - (1 - p))/b
+    split_probability = PI((num_split - j)/(COMB - j))
+
+However, a player may win against only some of the opponents and
+ultimately split the play of the hand with only a portion of the number
+of opponents. To estimate the effective probability for a given
+win-split combination, the the following multiplication equation
+using Capital Pi notation, where "PI" is the multiplication function,
+"i" is from 0 to the number of wins against the opponents, "j" is from 0
+to the number of splits with the opponents, "num_win" is the number of
+possible winning showdowns for the respective betting round, "num_split"
+is the number of possible winning showdowns for the respective betting
+round, "COMB" is the total number of possible showdowns for the
+respective betting round, and "num_opponents" is the total number of
+opponents:
+
+    win-split_probability = (num_opponents choose i) *
+                            PI((num_win - i)/(COMB - i)) *
+                            PI((num_split - j)/(COMB - j))
+
+The reason for the multiplication by the binomial coefficient
+(num_opponents choose i) is to account for the permutations of a
+particular win-split combination. For example, if there are two
+opponents, there will be four possible win-split combinations: SS, SW,
+WS, and WW, where S represents a split and W represents a WIN. In this
+scenario, SW and WS are different permutations of the same win-split
+combination, and should be accounted accordingly.
 
 In Texas hold 'em, the net odds received on the wager is dependent on
 the state of the pot during the showdown. In particular, when not
@@ -367,9 +385,10 @@ pots, the net gain can be expressed by the following equation:
 
     net_gain = bet_amount * num_opponents + retained_pot_amount
 
-The Kelly criterion formula returns the optimal bet amount as a
-fraction of the player's current bankroll. As such, net gain must first
-be normalized to the player's current bankroll:
+Cassandra uses the Kelly criterion to determine the suggested bet amount
+for the player. The Kelly criterion formula returns the optimal bet
+amount as a fraction of the player's current bankroll. As such, net gain
+must first be normalized to the player's current bankroll:
 
     net_gain/bankroll = (bet_amount/bankroll) * num_opponents
                         + retained_pot_amount/bankroll
@@ -389,37 +408,40 @@ the wager:
     b = net_odds = (net_gain/bankroll)/f = net_gain/bet_amount
     b = n + c/f
 
-Plugging "b" into the original Kelly criterion formula and solving for
-the "f" variable gives us the version used in Cassandra to determine the
-optimal bet amount, where "sqrt" is the square root function and "**" is
-the exponential operator:
+In a split pot situation, the pot is split between the tied players.
+Accounting for splits in the net odds equation follows simply as
+adding the player's portion (1 since the wagers are normalized) and
+dividing by the number of players tied (number of opponents tied plus
+the player), then finally subtracting out the player's portion to get
+the net odds where a split pot has been considered. The following
+equation, where "z" is the net odds considering a split pot, "b" is the
+net odds without considering a split pot, and "s" is the number of
+opponents tied with the player:
 
-    f = ((n + c/f)*p - (1 - p))/(n + c/f)
-    f = (sqrt((1+c-p-n*p)**2 + 4*n*c*p) - (1+c-p-n*p))/(2*n)
+    z = win-split_net_odds = (1 + b)/(1 + s) - 1
 
-Determing the closed form solution for the Kelly criterion of bets with
-more than two outcomes is more difficult, so Cassandra only considers
-the win probability of a given hand. However, to be more accurate, the
-formula should consider the split pot probability. Assuming no side
-pots, a simplified (worse case scenario) split pot net odds is simply
-the win net odds divided by the number of opponents; where "z" is the
-split pot net odds, "b" is the win net odds, and "n" is the number of
-opponents:
-
-    z = b/n = (n + c/f)/n
-    z = 1 + c/(f*n)
+The probability of losing the play of the hand is simply probability of
+neither winning nor splitting the play of the hand; the probability of
+losing can be computed by subtracting the cumulative win-split
+probability from 1). The net odds for losing the play of the hand in
+Texas hold 'em is -1 since the player simply loses their wager.
 
 Going back to the definition of the Kelly criterion, we can take into
-account both the win and split pot probabilities in the following
-expression; where "w" is the win probability, "s" is the split pot
-probability, "f" is the bet amount, "n" is the number of opponents, and
-"c" is the retained pot amount:
+account both the win and split pot probabilities and their respective
+net odds, in the following expression; where SIGMA is the summation
+function (iterating through all possible win-split combinations), "p" is
+the win-split probability for a respective win-split combination, "z" is
+the net odds for a respective win-split combination, "q" is the
+probability of losing the play of the hand, and "x" is the Kelly
+criterion:
 
-    w*log(1 + b*f) + s*log(1 + (b/n)*f + (1 - (w+s))*log(1 - f)
-    w*log(1 + f*n + c) + s*log(1 + f + c/n) + (1 - (w+s))*log(1 - f)
+    SIGMA(p*log(1 + z*x)) + q*log(1-x)
 
 After plugging in the known values, the optimum bet amount is that which
-maximizes the value of the expression.
+maximizes the value of the expression. The maximum of the expression can
+be computed by solving for the root of the derivative of the expression:
+
+    0 = SIGMA(p*z/(1 + z*x)) - q/(1-x)
 
 Results and Musings
 -------------------
@@ -428,9 +450,9 @@ Unfortunately, testing Cassandra against computer opponents didn't
 result in winning the entire game of Texas hold 'em poker. I suspect
 this is mainly due to the blinds: they force a minimum bet which may be
 greater than Cassandra's suggested bet amount allows. This, coupled with
-the multiplicative decay of the win probability when accounting for
-multiple opponents, often lead to a condition where possessing a small
-bankroll meant little chance of growing the bankroll -- instead,
+the multiplicative decay of the win-split probability when accounting
+for multiple opponents, often lead to a condition where possessing a
+small bankroll meant little chance of growing the bankroll -- instead,
 gradually losing more and more of the bankroll until eventually going
 broke.
 
@@ -446,15 +468,30 @@ the Kelly criterion will never take a risky call, thus allowing the
 opponent to go all-in repeatedly without fear of competition, resulting
 in consistent folds for the player.
 
-It is important to note that Cassandra currently takes only the win
-probability into account (i.e. showdowns ending in a split pot are
-assumed to be losses) and assumes no side pots. Furthermore, all
-opponents are assumed to last until the showdown. These assumptions
-drive the suggested bet amount lower than the true Kelly criterion since
-a worst case scenario is assumed. The fact that using this lower bet
-amount didn't result the winning of the entire Texas hold 'em poker game
-may very well be a testament to the aspect of skill required in playing
-poker -- it is more than a simple game of luck.
+It is important to note that Cassandra currently assumes no side pots,
+and the computation of a win-split probability for a win-split
+combination is only an estimate (the win/split outcomes are not
+reevaluated as each possible opponent outcome is selected for a
+win-split combination, but instead estimated using a geometric
+distribution model). Furthermore, all opponents are assumed to last
+until the showdown.
+
+Due to the algorithm choosen to determine the Kelly criterion in
+Cassandra, the Kelly criterions 0 and 1 cannot be directly verified (a
+division by 0 occurs in the computation for such inputs). As such, a
+low bound of 0.001 and high bound of 0.999 are used when searching for
+the actual Kelly criterion. If both bounds return negative values for
+the derivative of the Kelly criterion expression, the criterion is
+assumed to be 0; similarly if both bounds respectively return positive
+values, the Kelly criterion is assumed to be the high bound.
+
+All these assumptions drive the suggested bet amount lower than the true
+Kelly criterion since a worst case scenario is assumed.
+
+The fact that using this lower bet amount didn't result in the winning
+of the entire Texas hold 'em poker game may very well be a testament to
+the aspect of skill required in playing poker -- it is more than a
+simple game of luck.
 
 Licensing
 ---------

@@ -25,18 +25,21 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC_C99
 
 # Checks for libraries.
-AC_SEARCH_LIBS([sqrt], [m],
+AC_SEARCH_LIBS([floor], [m],
              [AC_CHECK_HEADERS([math.h], [],
                                [AC_MSG_ERROR([*** The math header file was not found.])]
               )],
              [AC_MSG_ERROR([*** The math library was not found.])]
 )
+AC_SEARCH_LIBS([cblas_dgemm], [gslcblas], [],
+               [AC_MSG_ERROR([*** The CBLAS library was not found.])]
+)
+AC_SEARCH_LIBS([gsl_blas_dgemm], [gsl], [],
+               [AC_MSG_ERROR([*** The GSL library was not found.])]
+)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
-
-# Checks for library functions.
-AC_CHECK_FUNCS([floor sqrt])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

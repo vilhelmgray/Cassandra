@@ -16,5 +16,5 @@
 ## along with Cassandra.  If not, see <http://www.gnu.org/licenses/>.
 
 bin_PROGRAMS = cassandra
-cassandra_SOURCES = cassandra.c lookup.c
-cassandra_SOURCES += counter.h lookup.h
+cassandra_SOURCES = cassandra.c kelly.c lookup.c
+cassandra_SOURCES += counter.h kelly.h lookup.h
